@@ -11,6 +11,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <!-- New Libraries for Features -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.2/color-thief.umd.js"></script>
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
@@ -160,6 +163,16 @@
             opacity: 0;
         }
         .btn-gradient:hover::after { opacity: 1; }
+        
+        /* Palette Swatch */
+        .color-swatch {
+            transition: transform 0.2s ease;
+            cursor: copy;
+        }
+        .color-swatch:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
 
     </style>
 </head>
@@ -187,7 +200,7 @@
     <!-- Main Wrapper -->
     <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 lg:p-8">
         
-        <div class="w-full max-w-5xl glass-panel rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-700">
+        <div class="w-full max-w-6xl glass-panel rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-700">
             
             <!-- Header -->
             <header class="p-8 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 bg-white/0">
@@ -224,6 +237,22 @@
                     <button data-tool="pdf" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         To PDF
+                    </button>
+                     <button data-tool="editor" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Editor
+                    </button>
+                     <button data-tool="base64" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                        Base64
+                    </button>
+                     <button data-tool="qr" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4h0.01M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6m-6 6h6m6-6h6m-6 6h6m-6-6v6"></path></svg>
+                        QR Code
+                    </button>
+                    <button data-tool="colors" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                        Colors
                     </button>
                     <button data-tool="lottie" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -283,8 +312,6 @@
                                 <div class="absolute inset-0 flex items-center justify-center font-bold text-white" id="compressor-progress-text">0%</div>
                             </div>
                             <p class="text-slate-400 animate-pulse">Crunching pixels...</p>
-                            <!-- Hidden linear bar for compatibility with logic -->
-                            <div class="hidden"><div id="compressor-progress-bar"></div></div>
                         </div>
                         
                         <div id="compressor-result" class="hidden mt-6"></div>
@@ -417,7 +444,189 @@
                         <div id="pdf-result" class="hidden mt-6"></div>
                     </div>
 
-                    <!-- 5. Lottie Tool -->
+                    <!-- 5. Editor Tool -->
+                    <div id="editor-tool" class="tool-panel hidden">
+                        <div id="editor-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
+                             <input type="file" id="editor-file-input" class="hidden" accept="image/*">
+                             <div class="w-20 h-20 rounded-full bg-sky-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-sky-500/20 group-hover:border-sky-500/50">
+                                <svg class="w-10 h-10 text-sky-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Edit Image</h3>
+                            <p class="text-slate-400 text-sm">Filters, Adjustments & Rotation</p>
+                            <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Browse Image</button>
+                        </div>
+
+                        <div id="editor-interface" class="hidden flex flex-col lg:flex-row gap-6">
+                            <!-- Preview Area -->
+                            <div class="flex-grow bg-black/30 rounded-2xl p-4 border border-white/10 flex items-center justify-center min-h-[400px]">
+                                <canvas id="editor-canvas" class="max-w-full max-h-[500px] object-contain"></canvas>
+                            </div>
+
+                            <!-- Controls -->
+                            <div class="w-full lg:w-80 flex-shrink-0 space-y-6">
+                                <div class="bg-white/5 rounded-2xl p-5 border border-white/5 space-y-4">
+                                    <h4 class="text-sky-400 font-semibold text-sm uppercase tracking-wider mb-2">Adjustments</h4>
+                                    
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between text-xs text-slate-300"><span>Brightness</span><span id="val-brightness">100%</span></div>
+                                        <input type="range" id="edit-brightness" min="0" max="200" value="100" class="w-full">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between text-xs text-slate-300"><span>Contrast</span><span id="val-contrast">100%</span></div>
+                                        <input type="range" id="edit-contrast" min="0" max="200" value="100" class="w-full">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between text-xs text-slate-300"><span>Saturation</span><span id="val-saturate">100%</span></div>
+                                        <input type="range" id="edit-saturate" min="0" max="200" value="100" class="w-full">
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="flex justify-between text-xs text-slate-300"><span>Blur</span><span id="val-blur">0px</span></div>
+                                        <input type="range" id="edit-blur" min="0" max="10" step="0.5" value="0" class="w-full">
+                                    </div>
+                                </div>
+
+                                <div class="bg-white/5 rounded-2xl p-5 border border-white/5">
+                                    <h4 class="text-sky-400 font-semibold text-sm uppercase tracking-wider mb-3">Filters & Transform</h4>
+                                    
+                                    <div class="flex gap-2 mb-4">
+                                        <button id="btn-grayscale" class="flex-1 py-2 bg-slate-700/50 hover:bg-sky-500/20 text-xs rounded border border-white/5 text-slate-300 hover:text-white transition">Grayscale</button>
+                                        <button id="btn-sepia" class="flex-1 py-2 bg-slate-700/50 hover:bg-amber-500/20 text-xs rounded border border-white/5 text-slate-300 hover:text-white transition">Sepia</button>
+                                        <button id="btn-invert" class="flex-1 py-2 bg-slate-700/50 hover:bg-purple-500/20 text-xs rounded border border-white/5 text-slate-300 hover:text-white transition">Invert</button>
+                                    </div>
+                                    
+                                    <div class="grid grid-cols-4 gap-2">
+                                         <button id="btn-rotate-l" class="p-2 bg-slate-800 rounded hover:bg-slate-700 text-slate-300" title="Rotate Left">
+                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                                        </button>
+                                         <button id="btn-rotate-r" class="p-2 bg-slate-800 rounded hover:bg-slate-700 text-slate-300" title="Rotate Right">
+                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/></svg>
+                                        </button>
+                                        <button id="btn-flip-h" class="p-2 bg-slate-800 rounded hover:bg-slate-700 text-slate-300" title="Flip Horizontal">
+                                            <svg class="w-5 h-5 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5v14l11-7z"></path></svg>
+                                        </button>
+                                         <button id="btn-flip-v" class="p-2 bg-slate-800 rounded hover:bg-slate-700 text-slate-300" title="Flip Vertical">
+                                            <svg class="w-5 h-5 mx-auto rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5v14l11-7z"></path></svg>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="flex gap-3">
+                                    <button id="editor-reset" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-bold text-slate-300 transition">Reset</button>
+                                    <button id="editor-download" class="flex-[2] py-3 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 rounded-xl font-bold text-white shadow-lg shadow-sky-500/20 transition">Download</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 6. Base64 Tool -->
+                    <div id="base64-tool" class="tool-panel hidden">
+                         <div id="base64-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
+                             <input type="file" id="base64-file-input" class="hidden" accept="image/*">
+                             <div class="w-20 h-20 rounded-full bg-yellow-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-yellow-500/20 group-hover:border-yellow-500/50">
+                                <svg class="w-10 h-10 text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Image to Base64</h3>
+                            <p class="text-slate-400 text-sm">Generate Data URI for CSS/HTML</p>
+                            <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Select Image</button>
+                        </div>
+
+                        <div id="base64-result-area" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                            <div class="bg-slate-900/50 p-6 rounded-2xl border border-yellow-500/20">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h3 class="text-yellow-400 font-bold">Base64 String</h3>
+                                    <div class="flex gap-2">
+                                        <button id="base64-copy" class="px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 text-xs rounded border border-yellow-500/30 transition">Copy</button>
+                                        <button id="base64-reset" class="px-3 py-1 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs rounded transition">Clear</button>
+                                    </div>
+                                </div>
+                                <textarea id="base64-output" class="w-full h-64 bg-black/40 border border-white/10 rounded-xl p-4 text-xs font-mono text-slate-400 focus:outline-none focus:border-yellow-500/50 resize-none" readonly></textarea>
+                                <p class="text-xs text-slate-500 mt-2 text-right" id="base64-stats"></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 7. NEW: QR Code Tool -->
+                    <div id="qr-tool" class="tool-panel hidden">
+                         <div class="bg-white/5 rounded-2xl p-6 border border-white/5">
+                             <div class="flex flex-col md:flex-row gap-8">
+                                 <!-- Controls -->
+                                 <div class="w-full md:w-1/2 space-y-6">
+                                     <h3 class="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                         <svg class="w-6 h-6 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4h0.01M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6m-6 6h6m6-6h6m-6 6h6m-6-6v6"></path></svg>
+                                         QR Code Generator
+                                     </h3>
+                                     <div>
+                                         <label class="block text-sm text-slate-400 mb-2">Content (URL or Text)</label>
+                                         <input type="text" id="qr-text" class="w-full bg-black/40 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-fuchsia-500 outline-none" placeholder="https://example.com">
+                                     </div>
+                                     <div class="grid grid-cols-2 gap-4">
+                                         <div>
+                                             <label class="block text-sm text-slate-400 mb-2">Foreground Color</label>
+                                             <div class="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/10">
+                                                 <input type="color" id="qr-fg" value="#000000" class="w-8 h-8 rounded border-none cursor-pointer">
+                                                 <span class="text-xs text-slate-300 font-mono" id="qr-fg-val">#000000</span>
+                                             </div>
+                                         </div>
+                                         <div>
+                                             <label class="block text-sm text-slate-400 mb-2">Background Color</label>
+                                              <div class="flex items-center gap-2 bg-black/40 p-2 rounded-xl border border-white/10">
+                                                 <input type="color" id="qr-bg" value="#ffffff" class="w-8 h-8 rounded border-none cursor-pointer">
+                                                 <span class="text-xs text-slate-300 font-mono" id="qr-bg-val">#ffffff</span>
+                                             </div>
+                                         </div>
+                                     </div>
+                                     <button id="qr-generate" class="w-full bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-fuchsia-500/20 hover:shadow-fuchsia-500/40 transition-all">
+                                         Generate QR Code
+                                     </button>
+                                 </div>
+
+                                 <!-- Result -->
+                                 <div class="w-full md:w-1/2 flex flex-col items-center justify-center">
+                                     <div id="qr-container" class="bg-white p-4 rounded-xl shadow-2xl mb-4"></div>
+                                     <button id="qr-download" class="hidden text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
+                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                         Download PNG
+                                     </button>
+                                 </div>
+                             </div>
+                         </div>
+                    </div>
+
+                    <!-- 8. NEW: Color Palette Tool -->
+                    <div id="colors-tool" class="tool-panel hidden">
+                        <div id="colors-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
+                             <input type="file" id="colors-file-input" class="hidden" accept="image/*">
+                             <div class="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-rose-500/20 group-hover:border-rose-500/50">
+                                <svg class="w-10 h-10 text-rose-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Extract Colors</h3>
+                            <p class="text-slate-400 text-sm">Get dominant palette from image</p>
+                            <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Select Image</button>
+                        </div>
+
+                        <div id="colors-result-area" class="hidden animate-in fade-in slide-in-from-bottom-4 duration-500">
+                             <div class="flex flex-col md:flex-row gap-6">
+                                 <div class="w-full md:w-1/3">
+                                     <div class="bg-black/30 p-2 rounded-2xl border border-white/10">
+                                         <img id="colors-preview" class="w-full h-auto rounded-xl object-cover">
+                                     </div>
+                                 </div>
+                                 <div class="w-full md:w-2/3">
+                                     <div class="bg-white/5 rounded-2xl p-6 border border-white/5 h-full">
+                                         <h3 class="text-white font-bold mb-4">Dominant Color</h3>
+                                         <div id="dominant-swatch" class="h-20 w-full rounded-xl mb-6 shadow-lg flex items-center justify-center text-white/90 font-mono font-bold cursor-copy transition-transform hover:scale-[1.02]"></div>
+                                         
+                                         <h3 class="text-white font-bold mb-4">Palette</h3>
+                                         <div id="palette-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-4"></div>
+                                         <p class="text-xs text-slate-500 mt-4 text-center">Click any color to copy Hex code</p>
+                                         <button id="colors-reset" class="mt-4 w-full py-2 bg-white/5 hover:bg-white/10 text-slate-300 rounded-lg transition-colors">Process Another Image</button>
+                                     </div>
+                                 </div>
+                             </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Lottie Tool (Existing) -->
                     <div id="lottie-tool" class="tool-panel hidden">
                          <div id="lottie-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
                              <input type="file" id="lottie-file-input" class="hidden" accept=".json">
@@ -487,7 +696,7 @@
         </footer>
     </div>
 
-    <!-- Logic (Preserved functionality with UI updates) -->
+    <!-- Logic -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             // === Splash Screen ===
@@ -545,7 +754,6 @@
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1', '#a855f7', '#ec4899', '#06b6d4'] });
             };
 
-            // Enhanced Result Card
             const createResultCard = (title, content, links = [], onReset) => {
                 const linkButtons = links.map(link => `
                     <a href="${link.href}" download="${link.download}" class="flex-1 text-center bg-white text-indigo-900 font-bold py-3 px-4 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 shadow-lg">
@@ -578,7 +786,7 @@
                 return card;
             };
 
-            // File List Renderer
+            // Generic Rendering & Handlers
             let renderFileList = (tool) => {
                 const files = fileStore[tool];
                 const dropZone = document.getElementById(`${tool}-drop-zone`);
@@ -621,7 +829,6 @@
                 }
             };
 
-            // Generic File Handler
             function setupImageTool(tool) {
                 const dropZone = document.getElementById(`${tool}-drop-zone`);
                 const fileInput = document.getElementById(`${tool}-file-input`);
@@ -652,9 +859,7 @@
             }
             ['compressor', 'converter', 'resizer', 'pdf'].forEach(setupImageTool);
 
-            // --- Tool Logic (Keeping logic mostly identical, mapped to new IDs) ---
-
-            // 1. Compressor
+            // === TOOL 1: COMPRESSOR ===
             const qualitySlider = document.getElementById('quality-slider');
             const qualityValue = document.getElementById('quality-value');
             qualitySlider.addEventListener('input', e => qualityValue.textContent = `${e.target.value}%`);
@@ -675,10 +880,8 @@
                     totalOrig += files[i].size;
                     const pct = Math.round(((i + 1) / files.length) * 100);
                     
-                    // Radial Progress for Compressor
                     const circle = document.getElementById('compressor-radial-progress');
-                    const offset = 251 - (251 * pct / 100);
-                    circle.style.strokeDashoffset = offset;
+                    if(circle) circle.style.strokeDashoffset = 251 - (251 * pct / 100);
                     document.getElementById('compressor-progress-text').textContent = `${pct}%`;
 
                     const blob = await new Promise(resolve => {
@@ -697,15 +900,13 @@
                     });
                     
                     totalComp += blob.size;
-                    const name = files[i].name.replace(/\.[^/.]+$/, "") + ".jpg";
-                    processed.push({ name, blob });
-                    await new Promise(r => setTimeout(r, 100)); // Visual delay
+                    processed.push({ name: files[i].name.replace(/\.[^/.]+$/, "") + ".jpg", blob });
+                    await new Promise(r => setTimeout(r, 50));
                 }
 
                 launchConfetti();
                 document.getElementById(`${tool}-progress-area`).classList.add('hidden');
                 
-                // Result Generation
                 let link;
                 if (processed.length === 1) {
                     link = { href: URL.createObjectURL(processed[0].blob), download: processed[0].name, text: 'Download Image' };
@@ -717,7 +918,7 @@
                 }
 
                 const saved = totalOrig - totalComp;
-                const reduction = (saved / totalOrig * 100).toFixed(0);
+                const reduction = totalOrig > 0 ? (saved / totalOrig * 100).toFixed(0) : 0;
                 const html = `<div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 mb-2">-${reduction}%</div><p>Reduced from ${formatBytes(totalOrig)} to ${formatBytes(totalComp)}</p>`;
                 
                 const resArea = document.getElementById(`${tool}-result`);
@@ -728,7 +929,7 @@
                 resArea.classList.remove('hidden');
             };
 
-            // 2. Converter
+            // === TOOL 2: CONVERTER ===
             document.getElementById('convert-button').onclick = async () => {
                 const tool = 'converter';
                 const files = fileStore[tool];
@@ -761,8 +962,7 @@
                         reader.readAsDataURL(files[i]);
                     });
                     
-                    const name = files[i].name.replace(/\.[^/.]+$/, "") + "." + ext;
-                    processed.push({ name, blob });
+                    processed.push({ name: files[i].name.replace(/\.[^/.]+$/, "") + "." + ext, blob });
                     await new Promise(r => setTimeout(r, 50));
                 }
 
@@ -779,20 +979,19 @@
                 }
 
                 const resArea = document.getElementById(`${tool}-result`);
-                resArea.innerHTML = createResultCard('Format Shifted', `<p>Converted ${processed.length} files to <strong>${ext.toUpperCase()}</strong> successfully.</p>`, [link], () => {
+                resArea.innerHTML = createResultCard('Format Shifted', `<p>Converted ${processed.length} files to <strong>${ext.toUpperCase()}</strong>.</p>`, [link], () => {
                     fileStore[tool] = [];
                     renderFileList(tool);
                 });
                 resArea.classList.remove('hidden');
             };
 
-            // 3. Resizer
+            // === TOOL 3: RESIZER ===
             const wInput = document.getElementById('resize-width');
             const hInput = document.getElementById('resize-height');
             const lockAspect = document.getElementById('aspect-ratio-lock');
             let aspect = 0;
 
-            // Aspect Ratio Logic hook
             const origRender = renderFileList;
             renderFileList = (tool) => {
                 if(tool === 'resizer' && fileStore.resizer.length && !aspect) {
@@ -867,7 +1066,7 @@
                 resArea.classList.remove('hidden');
             };
 
-            // 4. PDF
+            // === TOOL 4: PDF ===
             document.getElementById('pdf-button').onclick = async () => {
                 const tool = 'pdf';
                 const files = fileStore[tool];
@@ -918,7 +1117,259 @@
                 resArea.classList.remove('hidden');
             };
 
-            // 5. Lottie Logic
+            // === TOOL 5: EDITOR ===
+            const editorDrop = document.getElementById('editor-drop-zone');
+            const editorFile = document.getElementById('editor-file-input');
+            const editorInterface = document.getElementById('editor-interface');
+            const editorCanvas = document.getElementById('editor-canvas');
+            const ctx = editorCanvas.getContext('2d');
+            let currentImage = null;
+            let editState = { brightness: 100, contrast: 100, saturate: 100, blur: 0, grayscale: 0, sepia: 0, invert: 0, rotate: 0, flipH: 1, flipV: 1 };
+
+            // Editor Load
+            const loadEditorImage = (file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        currentImage = img;
+                        editorDrop.classList.add('hidden');
+                        editorInterface.classList.remove('hidden');
+                        resetEditor();
+                        renderEditor();
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            };
+
+            editorDrop.onclick = (e) => { if(e.target.tagName !== 'BUTTON') editorFile.click(); };
+            editorDrop.querySelector('button').onclick = () => editorFile.click();
+            editorFile.onchange = (e) => { if(e.target.files.length) loadEditorImage(e.target.files[0]); };
+
+            // Editor Render Logic
+            const renderEditor = () => {
+                if(!currentImage) return;
+                
+                // Set canvas size (swap w/h if rotated 90/270)
+                const rot = Math.abs(editState.rotate % 180);
+                if (rot === 90) {
+                    editorCanvas.width = currentImage.height;
+                    editorCanvas.height = currentImage.width;
+                } else {
+                    editorCanvas.width = currentImage.width;
+                    editorCanvas.height = currentImage.height;
+                }
+
+                ctx.filter = `brightness(${editState.brightness}%) contrast(${editState.contrast}%) saturate(${editState.saturate}%) blur(${editState.blur}px) grayscale(${editState.grayscale}) sepia(${editState.sepia}) invert(${editState.invert})`;
+                
+                ctx.save();
+                ctx.translate(editorCanvas.width / 2, editorCanvas.height / 2);
+                ctx.rotate(editState.rotate * Math.PI / 180);
+                ctx.scale(editState.flipH, editState.flipV);
+                ctx.drawImage(currentImage, -currentImage.width / 2, -currentImage.height / 2);
+                ctx.restore();
+            };
+
+            // Controls
+            const bindSlider = (id, prop, unit) => {
+                document.getElementById(id).oninput = (e) => {
+                    editState[prop] = e.target.value;
+                    document.getElementById(`val-${prop}`).textContent = e.target.value + unit;
+                    renderEditor();
+                };
+            };
+            bindSlider('edit-brightness', 'brightness', '%');
+            bindSlider('edit-contrast', 'contrast', '%');
+            bindSlider('edit-saturate', 'saturate', '%');
+            bindSlider('edit-blur', 'blur', 'px');
+
+            const toggleFilter = (btnId, prop) => {
+                document.getElementById(btnId).onclick = () => {
+                    editState[prop] = editState[prop] ? 0 : 1;
+                    document.getElementById(btnId).classList.toggle('bg-sky-500', editState[prop]);
+                    document.getElementById(btnId).classList.toggle('text-white', editState[prop]);
+                    renderEditor();
+                };
+            };
+            toggleFilter('btn-grayscale', 'grayscale');
+            toggleFilter('btn-sepia', 'sepia');
+            toggleFilter('btn-invert', 'invert');
+
+            document.getElementById('btn-rotate-l').onclick = () => { editState.rotate -= 90; renderEditor(); };
+            document.getElementById('btn-rotate-r').onclick = () => { editState.rotate += 90; renderEditor(); };
+            document.getElementById('btn-flip-h').onclick = () => { editState.flipH *= -1; renderEditor(); };
+            document.getElementById('btn-flip-v').onclick = () => { editState.flipV *= -1; renderEditor(); };
+
+            const resetEditor = () => {
+                editState = { brightness: 100, contrast: 100, saturate: 100, blur: 0, grayscale: 0, sepia: 0, invert: 0, rotate: 0, flipH: 1, flipV: 1 };
+                ['brightness', 'contrast', 'saturate'].forEach(p => { document.getElementById(`edit-${p}`).value = 100; document.getElementById(`val-${p}`).textContent = "100%"; });
+                document.getElementById('edit-blur').value = 0; document.getElementById('val-blur').textContent = "0px";
+                ['btn-grayscale', 'btn-sepia', 'btn-invert'].forEach(id => {
+                    const b = document.getElementById(id);
+                    b.classList.remove('bg-sky-500', 'text-white');
+                });
+                renderEditor();
+            };
+            document.getElementById('editor-reset').onclick = resetEditor;
+            
+            document.getElementById('editor-download').onclick = () => {
+                const link = document.createElement('a');
+                link.download = 'edited-image.png';
+                link.href = editorCanvas.toDataURL();
+                link.click();
+                launchConfetti();
+            };
+
+
+            // === TOOL 6: BASE64 ===
+            const baseDrop = document.getElementById('base64-drop-zone');
+            const baseFile = document.getElementById('base64-file-input');
+            const baseRes = document.getElementById('base64-result-area');
+            const baseOut = document.getElementById('base64-output');
+
+            const handleBase64 = (file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    baseOut.value = e.target.result;
+                    baseDrop.classList.add('hidden');
+                    baseRes.classList.remove('hidden');
+                    document.getElementById('base64-stats').textContent = `${formatBytes(file.size)} • ${file.type}`;
+                };
+                reader.readAsDataURL(file);
+            };
+
+            baseDrop.onclick = (e) => { if(e.target.tagName !== 'BUTTON') baseFile.click(); };
+            baseDrop.querySelector('button').onclick = () => baseFile.click();
+            baseFile.onchange = (e) => { if(e.target.files.length) handleBase64(e.target.files[0]); };
+
+            document.getElementById('base64-copy').onclick = () => {
+                baseOut.select();
+                document.execCommand('copy'); 
+                const btn = document.getElementById('base64-copy');
+                const orig = btn.textContent;
+                btn.textContent = "Copied!";
+                setTimeout(() => btn.textContent = orig, 1500);
+            };
+            document.getElementById('base64-reset').onclick = () => {
+                baseOut.value = '';
+                baseRes.classList.add('hidden');
+                baseDrop.classList.remove('hidden');
+                baseFile.value = '';
+            };
+            
+            // === TOOL 7: NEW - QR CODE GENERATOR ===
+            document.getElementById('qr-generate').onclick = () => {
+                const text = document.getElementById('qr-text').value;
+                if(!text) return;
+                
+                const container = document.getElementById('qr-container');
+                container.innerHTML = '';
+                
+                const fg = document.getElementById('qr-fg').value;
+                const bg = document.getElementById('qr-bg').value;
+                
+                new QRCode(container, {
+                    text: text,
+                    width: 200,
+                    height: 200,
+                    colorDark : fg,
+                    colorLight : bg,
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+                
+                // Allow time for canvas/img render
+                setTimeout(() => {
+                    const img = container.querySelector('img');
+                    if(img) {
+                        const dl = document.getElementById('qr-download');
+                        dl.classList.remove('hidden');
+                        dl.onclick = () => {
+                            const link = document.createElement('a');
+                            link.download = 'qrcode.png';
+                            link.href = img.src;
+                            link.click();
+                        }
+                    }
+                }, 100);
+            };
+            
+            document.getElementById('qr-fg').oninput = (e) => document.getElementById('qr-fg-val').textContent = e.target.value;
+            document.getElementById('qr-bg').oninput = (e) => document.getElementById('qr-bg-val').textContent = e.target.value;
+
+            // === TOOL 8: NEW - COLOR EXTRACTOR ===
+            const colorThief = new ColorThief();
+            const colorsDrop = document.getElementById('colors-drop-zone');
+            const colorsFile = document.getElementById('colors-file-input');
+            const colorsRes = document.getElementById('colors-result-area');
+            const colorsPreview = document.getElementById('colors-preview');
+
+            const rgbToHex = (r, g, b) => '#' + [r, g, b].map(x => {
+                const hex = x.toString(16);
+                return hex.length === 1 ? '0' + hex : hex;
+            }).join('');
+
+            const copyToClipboard = (text) => {
+                const el = document.createElement('textarea');
+                el.value = text;
+                document.body.appendChild(el);
+                el.select();
+                document.execCommand('copy');
+                document.body.removeChild(el);
+            };
+
+            const handleColors = (file) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    colorsPreview.src = e.target.result;
+                    colorsPreview.onload = () => {
+                        colorsDrop.classList.add('hidden');
+                        colorsRes.classList.remove('hidden');
+                        
+                        try {
+                            // Dominant Color
+                            const dColor = colorThief.getColor(colorsPreview);
+                            const dHex = rgbToHex(...dColor);
+                            const dSwatch = document.getElementById('dominant-swatch');
+                            dSwatch.style.backgroundColor = `rgb(${dColor.join(',')})`;
+                            dSwatch.innerText = dHex;
+                            dSwatch.style.color = (dColor[0]*0.299 + dColor[1]*0.587 + dColor[2]*0.114) > 186 ? '#000000' : '#ffffff';
+                            dSwatch.onclick = () => { copyToClipboard(dHex); launchConfetti(); };
+                            
+                            // Palette
+                            const palette = colorThief.getPalette(colorsPreview, 8);
+                            const grid = document.getElementById('palette-grid');
+                            grid.innerHTML = '';
+                            palette.forEach(c => {
+                                const hex = rgbToHex(...c);
+                                const div = document.createElement('div');
+                                div.className = "h-20 rounded-xl shadow-md color-swatch flex items-center justify-center font-mono text-xs font-bold opacity-90 hover:opacity-100";
+                                div.style.backgroundColor = `rgb(${c.join(',')})`;
+                                div.style.color = (c[0]*0.299 + c[1]*0.587 + c[2]*0.114) > 186 ? '#000000' : '#ffffff';
+                                div.innerText = hex;
+                                div.onclick = () => { copyToClipboard(hex); div.innerText = "COPIED"; setTimeout(() => div.innerText = hex, 1000); };
+                                grid.appendChild(div);
+                            });
+                        } catch(err) {
+                            console.error(err);
+                        }
+                    };
+                };
+                reader.readAsDataURL(file);
+            };
+
+            colorsDrop.onclick = (e) => { if(e.target.tagName !== 'BUTTON') colorsFile.click(); };
+            colorsDrop.querySelector('button').onclick = () => colorsFile.click();
+            colorsFile.onchange = (e) => { if(e.target.files.length) handleColors(e.target.files[0]); };
+            
+            document.getElementById('colors-reset').onclick = () => {
+                colorsRes.classList.add('hidden');
+                colorsDrop.classList.remove('hidden');
+                colorsFile.value = '';
+            };
+
+
+            // === TOOL 7: LOTTIE (Existing) ===
             const lottieDrop = document.getElementById('lottie-drop-zone');
             const lottieFile = document.getElementById('lottie-file-input');
             const lottieView = document.getElementById('lottie-viewer-area');
@@ -971,7 +1422,6 @@
             };
             lottieFile.onchange = e => { if(e.target.files.length) handleLottie(e.target.files[0]); };
 
-            // Lottie Controls
             document.getElementById('play-pause-button').onclick = () => {
                 if(!lottieAnimationInstance) return;
                 if(lottieAnimationInstance.isPaused) {
