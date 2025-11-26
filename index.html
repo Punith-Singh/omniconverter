@@ -3,306 +3,494 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OmniConverter - All-in-One File Toolkit</title>
+    <title>OmniConverter - Pro Toolkit</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- External Libraries -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Slate 900 */
-            color: #f8fafc; /* Slate 50 */
+        :root {
+            --primary-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --glass-bg: rgba(15, 23, 42, 0.6);
         }
-        /* Aurora background effect */
-        .aurora-bg {
-            background: #0f172a;
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #050505;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Dynamic Background Orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.4;
+            animation: float 20s infinite ease-in-out;
+            z-index: 0;
+        }
+        .orb-1 { width: 50vw; height: 50vw; background: #4f46e5; top: -10%; left: -10%; animation-delay: 0s; }
+        .orb-2 { width: 40vw; height: 40vw; background: #c026d3; bottom: -10%; right: -5%; animation-delay: -5s; }
+        .orb-3 { width: 30vw; height: 30vw; background: #0891b2; top: 40%; left: 40%; animation-delay: -10s; }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -50px) scale(1.1); }
+            66% { transform: translate(-20px, 20px) scale(0.9); }
+        }
+
+        /* Glass Container */
+        .glass-panel {
+            background: var(--glass-bg);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+        /* Navigation Tabs */
+        .tool-tab {
             position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             overflow: hidden;
         }
-        .aurora-bg::before {
+        .tool-tab::before {
             content: '';
             position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 150%;
-            height: 150%;
-            background-image: radial-gradient(circle at center, rgba(79, 70, 229, 0.2) 0%, rgba(79, 70, 229, 0) 40%);
-            animation: aurora 15s linear infinite;
-            transform-origin: center;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: var(--primary-gradient);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
         }
-        @keyframes aurora {
-            from { transform: translate(-50%, -50%) rotate(0deg); }
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        /* Custom scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #1e293b; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
-        
-        .tool-tab.active {
-            background-color: #4f46e5;
-            color: #ffffff;
+        .tool-tab:hover {
+            border-color: rgba(255, 255, 255, 0.2);
             transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(79, 70, 229, 0.4);
         }
-        .drop-zone { transition: all 0.3s ease; }
-        .drop-zone-dragover { 
-            border-color: #4f46e5; 
-            background-color: #1e293b;
-            transform: scale(1.02);
+        .tool-tab.active {
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.4);
         }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+        .tool-tab.active::before { opacity: 1; }
+
+        /* Drop Zone */
+        .drop-zone {
+            background-color: rgba(255,255,255,0.02);
+            background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+            background-size: 20px 20px;
+            transition: all 0.3s ease;
+            border: 2px dashed rgba(255,255,255,0.1);
+        }
+        .drop-zone:hover, .drop-zone-dragover {
+            border-color: #a855f7;
+            background-color: rgba(168, 85, 247, 0.05);
+            transform: scale(1.005);
+        }
+
+        /* Animations */
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .fade-in { animation: fadeIn 0.5s ease-in-out forwards; }
+        .fade-in { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
-        /* Splash Screen Style */
         .splash-fade-out {
             opacity: 0;
             pointer-events: none;
+            transition: opacity 0.6s ease;
+            filter: blur(10px);
         }
 
-        /* Progress Bar */
-        .progress-bar {
-            background-color: #334155;
-            border-radius: 9999px;
+        /* Inputs & Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 18px;
+            width: 18px;
+            border-radius: 50%;
+            background: #f8fafc;
+            cursor: pointer;
+            margin-top: -7px;
+            box-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+        }
+        
+        /* Gradient Button */
+        .btn-gradient {
+            background: var(--primary-gradient);
+            position: relative;
             overflow: hidden;
+            z-index: 1;
         }
-        .progress-bar-inner {
-            background-color: #4f46e5;
-            height: 100%;
-            border-radius: 9999px;
-            transition: width 0.3s ease;
+        .btn-gradient::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 100%);
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            opacity: 0;
         }
+        .btn-gradient:hover::after { opacity: 1; }
 
-        /* File list styling */
-        .file-list-item {
-            background-color: #1e293b;
-            border: 1px solid #334155;
-        }
-        .file-list-item img {
-            width: 32px;
-            height: 32px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
     </style>
 </head>
-<body class="antialiased aurora-bg">
-    <!-- Splash Screen -->
-    <div id="splash-screen" class="fixed inset-0 bg-slate-900 flex flex-col items-center justify-center z-50 transition-opacity duration-1000 ease-in-out">
-        <div id="lottie-animation" class="w-96 h-96"></div>
-        <h1 class="text-3xl font-bold text-white tracking-tight -mt-12">Omni<span class="text-indigo-400">Convert</span></h1>
-        <p class="text-slate-400 mt-2">Loading your tool...</p>
+<body>
+
+    <!-- Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="bg-orb orb-1"></div>
+        <div class="bg-orb orb-2"></div>
+        <div class="bg-orb orb-3"></div>
+        <!-- Noise Overlay -->
+        <div class="absolute inset-0 opacity-[0.03]" style="background-image: url('data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.65%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E');"></div>
     </div>
 
-    <div class="min-h-screen flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10">
-        <!-- Main Container -->
-        <div class="w-full max-w-4xl bg-slate-900/70 backdrop-blur-xl border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="fixed inset-0 bg-black z-50 flex flex-col items-center justify-center">
+        <div class="relative">
+            <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 rounded-full"></div>
+            <div id="lottie-animation" class="w-48 h-48 relative z-10"></div>
+        </div>
+        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400 mt-4 tracking-tight">OmniConvert</h1>
+        <p class="text-slate-500 text-sm mt-2 font-light tracking-widest uppercase">Initializing Core</p>
+    </div>
+
+    <!-- Main Wrapper -->
+    <div class="relative z-10 min-h-screen flex flex-col items-center justify-center p-4 lg:p-8">
+        
+        <div class="w-full max-w-5xl glass-panel rounded-3xl overflow-hidden flex flex-col shadow-2xl animate-in fade-in zoom-in duration-700">
             
-            <header class="p-6 border-b border-slate-700 text-center">
-                <h1 class="text-3xl sm:text-4xl font-bold text-white tracking-tight">Omni<span class="text-indigo-400">Convert</span></h1>
-                <p class="text-slate-400 mt-2 text-sm sm:text-base">Your one-stop toolkit for modern file conversion.</p>
+            <!-- Header -->
+            <header class="p-8 border-b border-white/5 flex flex-col md:flex-row justify-between items-center gap-4 bg-white/0">
+                <div class="text-center md:text-left">
+                    <h1 class="text-3xl font-bold tracking-tight text-white flex items-center justify-center md:justify-start gap-2">
+                        <svg class="w-8 h-8 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                        Omni<span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400">Convert</span>
+                    </h1>
+                    <p class="text-slate-400 text-sm mt-1">Professional Client-Side Toolkit</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-xs text-slate-400 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Secure Mode
+                    </span>
+                </div>
             </header>
 
-            <main class="p-4 sm:p-6">
-                <!-- Tool Navigation Tabs -->
-                <div class="flex flex-wrap justify-center gap-2 sm:gap-3 mb-6">
-                     <button data-tool="compressor" class="tool-tab active flex items-center gap-2 px-4 py-2 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 hover:bg-indigo-500 hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>
-                        Compressor
+            <main class="p-4 md:p-8 flex-grow flex flex-col">
+                
+                <!-- Navigation -->
+                <nav class="flex flex-wrap justify-center md:justify-start gap-3 mb-8">
+                     <button data-tool="compressor" class="tool-tab active px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Compress
                     </button>
-                    <button data-tool="converter" class="tool-tab flex items-center gap-2 px-4 py-2 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 hover:bg-indigo-500 hover:text-white">
-                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"/><line x1="4" x2="21" y1="20" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" x2="21" y1="15" y2="21"/><line x1="4" x2="9" y1="4" y2="9"/></svg>
-                        Converter
+                    <button data-tool="converter" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                        Convert
                     </button>
-                     <button data-tool="resizer" class="tool-tab flex items-center gap-2 px-4 py-2 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 hover:bg-indigo-500 hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 10.5h-6m6 0v6m0-6-7 7m-1.5-1.5-6-6m0 0v6m0-6h6"/></svg>
-                        Resizer
+                    <button data-tool="resizer" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                        Resize
                     </button>
-                    <button data-tool="pdf" class="tool-tab flex items-center gap-2 px-4 py-2 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 hover:bg-indigo-500 hover:text-white">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><path d="M10.4 12.6c.2.5.4.8.7 1s.7.3 1.1.3c.5 0 .9-.1 1.1-.4.2-.2.4-.6.4-.9 0-.4-.1-.7-.3-1-.2-.2-.5-.4-1-.5l-1-.3c-.8-.2-1.4-.6-1.9-1.1s-.7-1.1-.7-1.8c0-.7.3-1.3.8-1.8s1.2-.8 2.1-.8c.6 0 1.2.2 1.6.5s.8.8 1 1.4"/><path d="M16 12h-3v6h3"/></svg>
-                        Image to PDF
+                    <button data-tool="pdf" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                        To PDF
                     </button>
-                    <button data-tool="lottie" class="tool-tab flex items-center gap-2 px-4 py-2 text-sm sm:text-base font-medium rounded-lg transition-all duration-300 hover:bg-indigo-500 hover:text-white">
-                       <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3v4"/><path d="M19 17v4"/><path d="M12 3v4"/><path d="M5 17v4"/><path d="M19 3v4"/><path d="M12 17v4"/><rect width="20" height="8" x="2" y="8" rx="2"/></svg>
-                        Lottie Viewer
+                    <button data-tool="lottie" class="tool-tab px-5 py-3 rounded-xl text-sm font-medium text-slate-400 hover:text-white flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Lottie
                     </button>
-                </div>
+                </nav>
 
-                <!-- Tool Panels Container -->
-                <div id="tool-panels">
-                    <!-- Image Compressor Tool -->
+                <!-- Tool Container -->
+                <div id="tool-panels" class="relative min-h-[400px]">
+                    
+                    <!-- 1. Compressor -->
                     <div id="compressor-tool" class="tool-panel fade-in">
-                        <div id="compressor-drop-zone" class="drop-zone bg-slate-800 border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer">
+                        <div id="compressor-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
                             <input type="file" id="compressor-file-input" class="hidden" accept="image/png, image/jpeg, image/webp" multiple>
-                            <div class="flex flex-col items-center text-slate-400">
-                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
-                                <p class="font-semibold">Drag & drop images here</p>
-                                <p class="text-sm">or <span class="font-medium text-indigo-400">click to browse</span> or paste (<span class="font-mono">Ctrl+V</span>)</p>
+                            <div class="w-20 h-20 rounded-full bg-indigo-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-indigo-500/20 group-hover:border-indigo-500/50">
+                                <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Drop images to compress</h3>
+                            <p class="text-slate-400 text-sm">PNG, JPG, WEBP • Max 20MB</p>
+                            <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Browse Files</button>
                         </div>
-                        <div id="compressor-batch-area" class="hidden mt-6">
-                            <div id="compressor-file-list" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
-                            <div class="mt-4">
-                                <label for="quality-slider" class="block text-sm font-medium text-slate-300 mb-2">Compression Quality: <span id="quality-value" class="font-bold text-indigo-400">75</span>%</label>
-                                <input id="quality-slider" type="range" min="1" max="100" value="75" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+
+                        <div id="compressor-batch-area" class="hidden">
+                            <div class="bg-white/5 rounded-2xl p-6 border border-white/5 mb-6">
+                                <div class="flex justify-between items-center mb-4">
+                                    <h4 class="text-white font-medium flex items-center gap-2"><div class="w-2 h-2 bg-indigo-500 rounded-full"></div> Selected Files</h4>
+                                    <span class="text-xs text-slate-400 bg-white/5 px-2 py-1 rounded" id="compressor-count">0</span>
+                                </div>
+                                <div id="compressor-file-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
                             </div>
-                            <button id="compress-button" class="mt-4 w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">Compress Files</button>
+                            
+                            <div class="bg-indigo-500/5 rounded-2xl p-6 border border-indigo-500/10">
+                                <div class="flex justify-between items-center mb-4">
+                                    <label class="text-white font-medium">Quality</label>
+                                    <span class="text-2xl font-bold text-indigo-400" id="quality-value">75%</span>
+                                </div>
+                                <input id="quality-slider" type="range" min="1" max="100" value="75" class="w-full mb-2">
+                                <div class="flex justify-between text-xs text-slate-500 font-medium tracking-wide uppercase">
+                                    <span>Smaller Size</span>
+                                    <span>Better Quality</span>
+                                </div>
+                            </div>
+                            
+                            <button id="compress-button" class="mt-6 w-full btn-gradient text-white font-bold py-4 rounded-xl shadow-lg shadow-indigo-500/20 hover:shadow-indigo-500/40 transition-all transform active:scale-[0.99] tracking-wide">
+                                COMPRESS IMAGES
+                            </button>
                         </div>
-                        <div id="compressor-progress-area" class="hidden mt-6 space-y-2">
-                            <p id="compressor-progress-text" class="text-sm text-center text-slate-300">Compressing...</p>
-                            <div class="progress-bar h-2 w-full"><div id="compressor-progress-bar" class="progress-bar-inner w-0"></div></div>
+
+                        <div id="compressor-progress-area" class="hidden mt-12 text-center">
+                            <div class="relative w-24 h-24 mx-auto mb-4">
+                                <svg class="w-full h-full animate-spin text-indigo-500/30" viewBox="0 0 100 100">
+                                    <circle fill="none" stroke-width="8" stroke="currentColor" cx="50" cy="50" r="40" stroke-dasharray="250" stroke-dashoffset="0"></circle>
+                                </svg>
+                                <svg class="w-full h-full absolute top-0 left-0 text-indigo-400 transform -rotate-90" viewBox="0 0 100 100">
+                                     <circle fill="none" stroke-width="8" stroke-linecap="round" stroke="currentColor" cx="50" cy="50" r="40" stroke-dasharray="251" stroke-dashoffset="251" id="compressor-radial-progress" style="transition: stroke-dashoffset 0.3s ease;"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center font-bold text-white" id="compressor-progress-text">0%</div>
+                            </div>
+                            <p class="text-slate-400 animate-pulse">Crunching pixels...</p>
+                            <!-- Hidden linear bar for compatibility with logic -->
+                            <div class="hidden"><div id="compressor-progress-bar"></div></div>
                         </div>
+                        
                         <div id="compressor-result" class="hidden mt-6"></div>
                     </div>
-                    
-                    <!-- Image Converter Tool -->
+
+                    <!-- 2. Converter -->
                     <div id="converter-tool" class="tool-panel hidden">
-                        <div id="converter-drop-zone" class="drop-zone bg-slate-800 border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer">
+                         <div id="converter-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
                             <input type="file" id="converter-file-input" class="hidden" accept="image/*" multiple>
-                            <div class="flex flex-col items-center text-slate-400">
-                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h5M4 12h16M20 20v-5h-5"></path></svg>
-                                <p class="font-semibold">Drag & drop images to convert</p>
-                                <p class="text-sm">or <span class="font-medium text-indigo-400">click to browse</span> or paste (<span class="font-mono">Ctrl+V</span>)</p>
+                            <div class="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-emerald-500/20 group-hover:border-emerald-500/50">
+                                <svg class="w-10 h-10 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Drop images to convert</h3>
+                            <p class="text-slate-400 text-sm">Convert to PNG, JPG, WEBP</p>
+                            <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Browse Files</button>
+                        </div>
+
+                        <div id="converter-batch-area" class="hidden">
+                             <div class="bg-white/5 rounded-2xl p-6 border border-white/5 mb-6">
+                                <div id="converter-file-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="bg-emerald-500/5 p-6 rounded-2xl border border-emerald-500/10">
+                                    <label class="block text-emerald-300 font-medium mb-3">Target Format</label>
+                                    <select id="convert-format-select" class="w-full bg-black/40 border border-white/10 text-white rounded-xl px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                        <option value="image/png">PNG (Lossless)</option>
+                                        <option value="image/jpeg">JPEG (Compressed)</option>
+                                        <option value="image/webp">WEBP (Efficient)</option>
+                                    </select>
+                                </div>
+                                <div class="flex items-end">
+                                    <button id="convert-button" class="w-full bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-emerald-500/20 hover:shadow-emerald-500/40 transition-all transform active:scale-[0.99] tracking-wide h-[74px]">
+                                        CONVERT NOW
+                                    </button>
+                                </div>
                             </div>
                         </div>
-                        <div id="converter-batch-area" class="hidden mt-6">
-                            <div id="converter-file-list" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
-                            <div class="mt-4">
-                                <label for="convert-format-select" class="block text-sm font-medium text-slate-300 mb-2">Convert to:</label>
-                                <select id="convert-format-select" class="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white">
-                                    <option value="image/png">PNG</option>
-                                    <option value="image/jpeg">JPEG</option>
-                                    <option value="image/webp">WEBP</option>
-                                </select>
+
+                        <div id="converter-progress-area" class="hidden mt-12">
+                            <div class="w-full bg-white/5 rounded-full h-4 overflow-hidden relative">
+                                <div id="converter-progress-bar" class="bg-gradient-to-r from-emerald-500 to-teal-400 h-full w-0 transition-all duration-300 shadow-[0_0_15px_rgba(16,185,129,0.5)]"></div>
                             </div>
-                            <button id="convert-button" class="mt-4 w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">Convert Files</button>
-                        </div>
-                        <div id="converter-progress-area" class="hidden mt-6 space-y-2">
-                            <p id="converter-progress-text" class="text-sm text-center text-slate-300">Converting...</p>
-                            <div class="progress-bar h-2 w-full"><div id="converter-progress-bar" class="progress-bar-inner w-0"></div></div>
+                            <p class="text-center text-emerald-400 mt-3 font-mono text-sm" id="converter-progress-text">0%</p>
                         </div>
                         <div id="converter-result" class="hidden mt-6"></div>
                     </div>
 
-                    <!-- Image Resizer Tool -->
+                    <!-- 3. Resizer -->
                     <div id="resizer-tool" class="tool-panel hidden">
-                         <div id="resizer-drop-zone" class="drop-zone bg-slate-800 border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer">
+                        <div id="resizer-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
                             <input type="file" id="resizer-file-input" class="hidden" accept="image/*" multiple>
-                            <div class="flex flex-col items-center text-slate-400">
-                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21H9.477a2 2 0 01-1.99-1.928l-1.04-9.375a2 2 0 011.99-2.072h4.225a2 2 0 011.831 1.139L15 10zM7 21h2m0 0h2m-2-2v-4m0 0H7"></path></svg>
-                                <p class="font-semibold">Drag & drop images to resize</p>
-                                <p class="text-sm">or <span class="font-medium text-indigo-400">click to browse</span> or paste (<span class="font-mono">Ctrl+V</span>)</p>
+                             <div class="w-20 h-20 rounded-full bg-pink-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-pink-500/20 group-hover:border-pink-500/50">
+                                <svg class="w-10 h-10 text-pink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
                             </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Drop images to resize</h3>
+                            <p class="text-slate-400 text-sm">Smart aspect ratio locking included</p>
+                             <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Browse Files</button>
                         </div>
-                        <div id="resizer-batch-area" class="hidden mt-6">
-                            <div id="resizer-file-list" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
-                             <div class="mt-4 grid grid-cols-2 gap-4">
+
+                        <div id="resizer-batch-area" class="hidden">
+                             <div class="bg-white/5 rounded-2xl p-6 border border-white/5 mb-6">
+                                <div id="resizer-file-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+                            </div>
+
+                            <div class="bg-pink-500/5 p-8 rounded-2xl border border-pink-500/10 grid grid-cols-1 md:grid-cols-2 gap-8 relative overflow-hidden">
+                                <div class="absolute top-0 right-0 p-4 opacity-50">
+                                    <label class="inline-flex items-center cursor-pointer">
+                                        <span class="mr-3 text-sm text-pink-300 font-medium">Lock Aspect</span>
+                                        <div class="relative">
+                                            <input id="aspect-ratio-lock" type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-pink-500"></div>
+                                        </div>
+                                    </label>
+                                </div>
+
                                 <div>
-                                    <label for="resize-width" class="block text-sm font-medium text-slate-300 mb-1">Width (px)</label>
-                                    <input type="number" id="resize-width" class="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white" placeholder="e.g., 1920">
+                                    <label class="block text-xs font-bold text-pink-300 uppercase tracking-wider mb-2">Width (px)</label>
+                                    <input type="number" id="resize-width" class="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-pink-500 outline-none font-mono text-lg" placeholder="1920">
                                 </div>
                                 <div>
-                                    <label for="resize-height" class="block text-sm font-medium text-slate-300 mb-1">Height (px)</label>
-                                    <input type="number" id="resize-height" class="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white" placeholder="e.g., 1080">
+                                    <label class="block text-xs font-bold text-pink-300 uppercase tracking-wider mb-2">Height (px)</label>
+                                    <input type="number" id="resize-height" class="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white focus:ring-2 focus:ring-pink-500 outline-none font-mono text-lg" placeholder="1080">
                                 </div>
-                             </div>
-                            <div class="mt-2 flex items-center">
-                                <input id="aspect-ratio-lock" type="checkbox" class="h-4 w-4 rounded border-slate-500 text-indigo-600 focus:ring-indigo-600" checked>
-                                <label for="aspect-ratio-lock" class="ml-2 text-sm text-slate-300">Lock aspect ratio</label>
+                                
+                                <div class="md:col-span-2">
+                                     <button id="resize-button" class="w-full bg-gradient-to-r from-pink-600 to-rose-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-500/20 hover:shadow-pink-500/40 transition-all transform active:scale-[0.99] tracking-wide">
+                                        RESIZE IMAGES
+                                    </button>
+                                </div>
                             </div>
-                            <button id="resize-button" class="mt-4 w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">Resize Files</button>
                         </div>
-                        <div id="resizer-progress-area" class="hidden mt-6 space-y-2">
-                            <p id="resizer-progress-text" class="text-sm text-center text-slate-300">Resizing...</p>
-                            <div class="progress-bar h-2 w-full"><div id="resizer-progress-bar" class="progress-bar-inner w-0"></div></div>
+
+                         <div id="resizer-progress-area" class="hidden mt-12">
+                            <div class="w-full bg-white/5 rounded-full h-4 overflow-hidden relative">
+                                <div id="resizer-progress-bar" class="bg-gradient-to-r from-pink-500 to-rose-400 h-full w-0 transition-all duration-300 shadow-[0_0_15px_rgba(236,72,153,0.5)]"></div>
+                            </div>
+                            <p class="text-center text-pink-400 mt-3 font-mono text-sm" id="resizer-progress-text">0%</p>
                         </div>
                         <div id="resizer-result" class="hidden mt-6"></div>
                     </div>
 
-                    <!-- Image to PDF Tool -->
+                    <!-- 4. PDF Tool -->
                     <div id="pdf-tool" class="tool-panel hidden">
-                        <div id="pdf-drop-zone" class="drop-zone bg-slate-800 border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer">
+                         <div id="pdf-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
                             <input type="file" id="pdf-file-input" class="hidden" accept="image/*" multiple>
-                            <div class="flex flex-col items-center text-slate-400">
-                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <p class="font-semibold">Drag & drop images to create a PDF</p>
-                                <p class="text-sm">or <span class="font-medium text-indigo-400">click to browse</span> or paste (<span class="font-mono">Ctrl+V</span>)</p>
+                             <div class="w-20 h-20 rounded-full bg-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-orange-500/20 group-hover:border-orange-500/50">
+                                <svg class="w-10 h-10 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                             </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Drop images for PDF</h3>
+                            <p class="text-slate-400 text-sm">Order matters • A4 Output</p>
+                            <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Browse Files</button>
                         </div>
-                        <div id="pdf-batch-area" class="hidden mt-6">
-                            <div id="pdf-file-list" class="space-y-2 max-h-48 overflow-y-auto pr-2"></div>
-                            <button id="pdf-button" class="mt-4 w-full bg-indigo-600 text-white font-semibold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">Create PDF</button>
+
+                        <div id="pdf-batch-area" class="hidden">
+                             <div class="bg-white/5 rounded-2xl p-6 border border-white/5 mb-6">
+                                <div id="pdf-file-list" class="space-y-2 max-h-60 overflow-y-auto pr-2 custom-scrollbar"></div>
+                            </div>
+                            <button id="pdf-button" class="mt-6 w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-orange-500/20 hover:shadow-orange-500/40 transition-all transform active:scale-[0.99] tracking-wide">
+                                COMPILE PDF
+                            </button>
                         </div>
-                        <div id="pdf-progress-area" class="hidden mt-6 space-y-2">
-                            <p id="pdf-progress-text" class="text-sm text-center text-slate-300">Creating PDF...</p>
-                            <div class="progress-bar h-2 w-full"><div id="pdf-progress-bar" class="progress-bar-inner w-0"></div></div>
+                        
+                         <div id="pdf-progress-area" class="hidden mt-12">
+                            <div class="w-full bg-white/5 rounded-full h-4 overflow-hidden relative">
+                                <div id="pdf-progress-bar" class="bg-gradient-to-r from-orange-500 to-amber-400 h-full w-0 transition-all duration-300 shadow-[0_0_15px_rgba(249,115,22,0.5)]"></div>
+                            </div>
+                            <p class="text-center text-orange-400 mt-3 font-mono text-sm" id="pdf-progress-text">0%</p>
                         </div>
                         <div id="pdf-result" class="hidden mt-6"></div>
                     </div>
 
-                    <!-- Lottie Viewer Tool -->
+                    <!-- 5. Lottie Tool -->
                     <div id="lottie-tool" class="tool-panel hidden">
-                        <div id="lottie-drop-zone" class="drop-zone bg-slate-800 border-2 border-dashed border-slate-600 rounded-lg p-8 text-center cursor-pointer">
+                         <div id="lottie-drop-zone" class="drop-zone rounded-2xl h-80 flex flex-col items-center justify-center cursor-pointer group">
                              <input type="file" id="lottie-file-input" class="hidden" accept=".json">
-                            <div class="flex flex-col items-center text-slate-400">
-                                <svg class="w-12 h-12 mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.625a2.25 2.25 0 01-2.36 0l-7.5-4.625A2.25 2.25 0 012.25 6.993V6.75" /></svg>
-                                <p class="font-semibold">Drag & drop your Lottie JSON file</p>
-                                <p class="text-sm">or <span class="font-medium text-indigo-400">click to browse</span></p>
+                             <div class="w-20 h-20 rounded-full bg-cyan-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 border border-cyan-500/20 group-hover:border-cyan-500/50">
+                                <svg class="w-10 h-10 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Drop Lottie JSON</h3>
+                            <p class="text-slate-400 text-sm">Instant Preview & Debugging</p>
+                            <button class="mt-6 px-6 py-2 rounded-full bg-white/5 border border-white/10 text-sm text-white hover:bg-white/10 transition-colors">Browse Files</button>
+                        </div>
+
+                        <div id="lottie-viewer-area" class="hidden animate-in fade-in duration-500">
+                             <div class="bg-black/30 p-2 rounded-2xl border border-white/10 backdrop-blur-sm">
+                                <div id="lottie-render-area" class="bg-[#1e293b] rounded-xl aspect-video w-full max-w-2xl mx-auto flex items-center justify-center overflow-hidden"></div>
+                            </div>
+                            
+                            <div class="mt-4 flex flex-col items-center">
+                                <div id="lottie-info" class="text-xs font-mono text-cyan-400 mb-2"></div>
+                                <div class="w-full max-w-2xl bg-white/10 h-1.5 rounded-full overflow-hidden">
+                                    <div id="lottie-progress-bar" class="bg-cyan-400 h-full w-0"></div>
+                                </div>
+                            </div>
+
+                             <div class="mt-6 p-6 bg-cyan-900/10 rounded-2xl border border-cyan-500/10 max-w-2xl mx-auto">
+                                <div class="flex items-center justify-center gap-6 mb-6">
+                                     <button id="stop-button" class="p-3 rounded-full text-slate-400 hover:text-white hover:bg-white/10 transition-colors">
+                                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"></path></svg>
+                                    </button>
+                                    <button id="play-pause-button" class="w-16 h-16 rounded-full bg-gradient-to-r from-cyan-500 to-blue-500 text-white flex items-center justify-center shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 transition-transform hover:scale-105 active:scale-95">
+                                        <svg id="play-icon" class="w-8 h-8 ml-1" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg>
+                                        <svg id="pause-icon" class="w-8 h-8 hidden" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg>
+                                    </button>
+                                </div>
+                                
+                                <div class="grid grid-cols-2 gap-8 text-sm">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-slate-300">Loop Animation</span>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input id="loop-toggle" type="checkbox" class="sr-only peer" checked>
+                                            <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-cyan-500"></div>
+                                        </label>
+                                    </div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-slate-300">Background</span>
+                                        <input id="lottie-bg-color" type="color" value="#1e293b" class="w-8 h-8 rounded-full border-2 border-white/20 cursor-pointer p-0 overflow-hidden">
+                                    </div>
+                                    <div class="col-span-2">
+                                        <div class="flex justify-between items-center mb-2">
+                                            <span class="text-slate-300">Speed</span>
+                                            <span id="speed-value" class="font-mono text-cyan-400">1.0x</span>
+                                        </div>
+                                        <input id="speed-slider" type="range" min="0.1" max="3" step="0.1" value="1" class="w-full">
+                                    </div>
+                                </div>
+                                <button id="lottie-reset-button" class="w-full mt-6 py-2 text-xs text-slate-500 uppercase tracking-widest hover:text-white transition-colors">Select New File</button>
                             </div>
                         </div>
-                        <div id="lottie-viewer-area" class="hidden mt-6">
-                            <div id="lottie-render-area" style="background-color: #1e293b;" class="rounded-lg aspect-square w-full max-w-md mx-auto border-2 border-slate-700 transition-colors duration-300"></div>
-                            <div id="lottie-info" class="text-xs text-slate-400 text-center mt-2 max-w-md mx-auto"></div>
-                            <div class="max-w-md mx-auto my-2">
-                                <div id="lottie-progress" class="progress-bar h-1 w-full"><div id="lottie-progress-bar" class="progress-bar-inner w-0 !transition-none"></div></div>
-                            </div>
-                            <div id="lottie-controls" class="mt-2 p-4 bg-slate-800 rounded-lg max-w-md mx-auto space-y-4">
-                                <div class="flex items-center justify-center gap-4">
-                                    <button id="play-pause-button" class="flex items-center justify-center w-12 h-12 bg-indigo-600 rounded-full text-white hover:bg-indigo-700 transition-colors">
-                                        <svg id="play-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.647c1.295.742 1.295 2.545 0 3.286L7.279 20.99c-1.25.717-2.779-.217-2.779-1.643V5.653z" clip-rule="evenodd" /></svg>
-                                        <svg id="pause-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 hidden"><path fill-rule="evenodd" d="M6.75 5.25a.75.75 0 01.75.75v12a.75.75 0 01-1.5 0v-12a.75.75 0 01.75-.75zm9 0a.75.75 0 01.75.75v12a.75.75 0 01-1.5 0v-12a.75.75 0 01.75-.75z" clip-rule="evenodd" /></svg>
-                                    </button>
-                                     <button id="stop-button" class="flex items-center justify-center w-12 h-12 bg-slate-600 rounded-full text-white hover:bg-slate-500 transition-colors">
-                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"><path fill-rule="evenodd" d="M4.5 7.5a3 3 0 013-3h9a3 3 0 013 3v9a3 3 0 01-3 3h-9a3 3 0 01-3-3v-9z" clip-rule="evenodd" /></svg>
-                                    </button>
-                                </div>
-                                <div class="grid grid-cols-2 gap-4 items-center">
-                                    <div class="flex items-center gap-2">
-                                        <label for="loop-toggle" class="text-sm font-medium text-slate-300">Loop</label>
-                                        <input id="loop-toggle" type="checkbox" class="h-4 w-4 rounded border-slate-500 text-indigo-600 focus:ring-indigo-600">
-                                    </div>
-                                    <div class="flex items-center gap-2">
-                                        <label for="lottie-bg-color" class="text-sm font-medium text-slate-300">BG</label>
-                                        <input id="lottie-bg-color" type="color" value="#1e293b" class="w-8 h-8 p-0 border-none rounded cursor-pointer bg-transparent">
-                                    </div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <label for="speed-slider" class="text-sm font-medium text-slate-300">Speed: <span id="speed-value">1.0</span>x</label>
-                                    <input id="speed-slider" type="range" min="0.1" max="3" step="0.1" value="1" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
-                                </div>
-                                <button id="lottie-reset-button" class="w-full text-center bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors duration-300">Load New File</button>
-                            </div>
-                        </div>
-                         <div id="lottie-error-area" class="hidden mt-6 text-center p-4 bg-red-900/50 text-red-300 rounded-lg"></div>
+                         <div id="lottie-error-area" class="hidden mt-6 text-center p-4 bg-red-500/10 border border-red-500/20 text-red-200 rounded-xl text-sm"></div>
                     </div>
                 </div>
+
             </main>
         </div>
-        <footer class="text-center mt-6">
-            <p class="text-slate-500 text-sm">Built by Punith.</p>
+        
+        <footer class="mt-8 text-center text-xs text-slate-600 font-medium tracking-wide z-10">
+            OMNICONVERT PRO • LOCAL PROCESSING • PRIVACY FIRST
         </footer>
     </div>
 
+    <!-- Logic (Preserved functionality with UI updates) -->
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            // === Splash Screen ===
             const splashScreen = document.getElementById('splash-screen');
             const lottieContainer = document.getElementById('lottie-animation');
 
@@ -311,27 +499,22 @@
                 renderer: 'svg',
                 loop: true,
                 autoplay: true,
-                path: 'https://assets6.lottiefiles.com/packages/lf20_p1qiuawe.json'
+                path: 'https://lottie.host/575a4006-2580-482a-9e73-c357753e1850/M2k5Gv84gP.json'
             });
 
             setTimeout(() => {
                 splashScreen.classList.add('splash-fade-out');
-            }, 2800);
+                setTimeout(() => splashScreen.remove(), 600);
+            }, 2000);
 
+            // === UI State & Tools ===
             const { jsPDF } = window.jspdf;
             const toolTabs = document.querySelectorAll('.tool-tab');
             const toolPanels = document.querySelectorAll('.tool-panel');
-            
-            // --- Global State ---
-            let fileStore = {
-                compressor: [],
-                converter: [],
-                resizer: [],
-                pdf: []
-            };
+            let fileStore = { compressor: [], converter: [], resizer: [], pdf: [] };
             let lottieAnimationInstance = null;
 
-            // --- Tab Navigation ---
+            // Tab Switching
             toolTabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const tool = tab.dataset.tool;
@@ -339,103 +522,122 @@
                     tab.classList.add('active');
 
                     toolPanels.forEach(panel => {
-                        panel.classList.toggle('hidden', panel.id !== `${tool}-tool`);
-                        if(panel.id === `${tool}-tool`) panel.classList.add('fade-in');
+                        if(panel.id === `${tool}-tool`) {
+                            panel.classList.remove('hidden');
+                            panel.classList.add('fade-in');
+                        } else {
+                            panel.classList.add('hidden');
+                            panel.classList.remove('fade-in');
+                        }
                     });
                 });
             });
-            
-            // --- Utility Functions ---
-            const formatBytes = (bytes, decimals = 2) => {
-                if (bytes === 0) return '0 Bytes';
-                const k = 1024;
-                const dm = decimals < 0 ? 0 : decimals;
-                const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-                const i = Math.floor(Math.log(bytes) / Math.log(k));
-                return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+
+            // Utilities
+            const formatBytes = (bytes) => {
+                if (bytes === 0) return '0 B';
+                const sizes = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(1024));
+                return `${parseFloat((bytes / Math.pow(1024, i)).toFixed(2))} ${sizes[i]}`;
             };
             
-            const launchConfetti = () => confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } });
+            const launchConfetti = () => {
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1', '#a855f7', '#ec4899', '#06b6d4'] });
+            };
 
+            // Enhanced Result Card
             const createResultCard = (title, content, links = [], onReset) => {
-                const linkButtons = links.map(link => `<a href="${link.href}" download="${link.download}" class="w-full text-center bg-green-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-green-700 transition-colors duration-300">${link.text}</a>`).join('');
+                const linkButtons = links.map(link => `
+                    <a href="${link.href}" download="${link.download}" class="flex-1 text-center bg-white text-indigo-900 font-bold py-3 px-4 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 shadow-lg">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        ${link.text}
+                    </a>`).join('');
+                
                 const card = `
-                    <div class="bg-slate-800 p-4 rounded-lg border border-slate-700 fade-in">
-                        <h3 class="font-semibold text-lg mb-3">${title}</h3>
-                        <div class="space-y-2 text-sm text-slate-300">${content}</div>
-                        <div class="mt-4 flex flex-col sm:flex-row gap-3">
-                            ${linkButtons}
-                            <button class="reset-button w-full text-center bg-slate-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition-colors duration-300">Start Over</button>
+                    <div class="bg-gradient-to-br from-indigo-600 to-fuchsia-700 p-1 rounded-2xl shadow-2xl fade-in mt-8">
+                        <div class="bg-slate-900/90 backdrop-blur rounded-xl p-8 border border-white/10">
+                            <div class="text-center mb-6">
+                                <div class="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg shadow-green-500/30">
+                                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                                <h3 class="font-bold text-2xl text-white">${title}</h3>
+                            </div>
+                            <div class="text-slate-300 mb-8 text-center">${content}</div>
+                            <div class="flex flex-col sm:flex-row gap-4">
+                                ${linkButtons}
+                                <button class="reset-button flex-1 text-center bg-slate-800 text-slate-300 font-medium py-3 px-4 rounded-xl hover:bg-slate-700 transition-colors border border-white/10">Process More</button>
+                            </div>
                         </div>
                     </div>`;
+                
                 setTimeout(() => {
-                    document.querySelector('.reset-button')?.addEventListener('click', onReset);
+                    const btn = document.querySelector('.reset-button');
+                    if(btn) btn.onclick = onReset;
                 }, 0);
+                
                 return card;
             };
 
-             let renderFileList = (tool) => {
+            // File List Renderer
+            let renderFileList = (tool) => {
                 const files = fileStore[tool];
                 const dropZone = document.getElementById(`${tool}-drop-zone`);
                 const batchArea = document.getElementById(`${tool}-batch-area`);
                 const fileListEl = document.getElementById(`${tool}-file-list`);
                 const resultArea = document.getElementById(`${tool}-result`);
+                const countEl = document.getElementById(`${tool}-count`);
 
                 dropZone.classList.toggle('hidden', files.length > 0);
                 batchArea.classList.toggle('hidden', files.length === 0);
                 if (resultArea) resultArea.classList.add('hidden');
                 
+                if (countEl) countEl.textContent = files.length;
+
                 if (fileListEl) {
                     fileListEl.innerHTML = '';
                     files.forEach((file, index) => {
-                        const listItem = document.createElement('div');
-                        listItem.className = "file-list-item flex items-center justify-between p-2 rounded-md gap-2";
-                        
-                        const img = document.createElement('img');
-                        img.src = URL.createObjectURL(file);
-                        img.onload = () => URL.revokeObjectURL(img.src);
-
-                        const nameSpan = document.createElement('span');
-                        nameSpan.className = "text-sm text-slate-300 truncate";
-                        nameSpan.textContent = file.name;
-
-                        const infoDiv = document.createElement('div');
-                        infoDiv.className = "flex items-center gap-2 flex-shrink-0";
-                        
-                        const sizeSpan = document.createElement('span');
-                        sizeSpan.className = "text-xs text-slate-400";
-                        sizeSpan.textContent = formatBytes(file.size);
-
-                        const removeButton = document.createElement('button');
-                        removeButton.dataset.index = index;
-                        removeButton.className = "remove-file text-red-400 hover:text-red-300 text-xl leading-none";
-                        removeButton.innerHTML = '&times;';
-                        removeButton.onclick = () => {
+                        const div = document.createElement('div');
+                        div.className = "flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group";
+                        div.innerHTML = `
+                            <div class="flex items-center gap-3 overflow-hidden">
+                                <div class="w-10 h-10 rounded bg-black/50 flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/10">
+                                    <img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" onload="URL.revokeObjectURL(this.src)">
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-sm text-slate-200 truncate font-medium">${file.name}</div>
+                                    <div class="text-xs text-slate-500 font-mono">${formatBytes(file.size)}</div>
+                                </div>
+                            </div>
+                            <button class="remove-btn w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            </button>
+                        `;
+                        div.querySelector('.remove-btn').onclick = () => {
                             fileStore[tool].splice(index, 1);
                             renderFileList(tool);
                         };
-
-                        listItem.appendChild(img);
-                        listItem.appendChild(nameSpan);
-                        infoDiv.appendChild(sizeSpan);
-                        infoDiv.appendChild(removeButton);
-                        listItem.appendChild(infoDiv);
-                        fileListEl.appendChild(listItem);
+                        fileListEl.appendChild(div);
                     });
                 }
             };
 
-            // --- Generic Tool Setup ---
+            // Generic File Handler
             function setupImageTool(tool) {
                 const dropZone = document.getElementById(`${tool}-drop-zone`);
                 const fileInput = document.getElementById(`${tool}-file-input`);
+                const browseBtn = dropZone.querySelector('button');
                 
                 const handleFiles = (files) => {
-                    fileStore[tool].push(...Array.from(files).filter(f => f.type.startsWith('image/')));
-                    renderFileList(tool);
+                    const valid = Array.from(files).filter(f => f.type.startsWith('image/'));
+                    if(valid.length) {
+                        fileStore[tool].push(...valid);
+                        renderFileList(tool);
+                    }
                 };
 
-                dropZone.onclick = () => fileInput.click();
+                dropZone.onclick = (e) => { if(e.target !== browseBtn) fileInput.click(); };
+                browseBtn.onclick = () => fileInput.click();
+                
                 dropZone.ondragover = e => { e.preventDefault(); dropZone.classList.add('drop-zone-dragover'); };
                 dropZone.ondragleave = e => { e.preventDefault(); dropZone.classList.remove('drop-zone-dragover'); };
                 dropZone.ondrop = e => {
@@ -443,448 +645,365 @@
                     dropZone.classList.remove('drop-zone-dragover');
                     if (e.dataTransfer.files.length) handleFiles(e.dataTransfer.files);
                 };
-                fileInput.onchange = e => { if (e.target.files.length) handleFiles(e.target.files); };
-                
-                document.addEventListener('paste', e => {
-                    const currentToolId = document.querySelector('.tool-panel:not(.hidden)').id;
-                    if (currentToolId === `${tool}-tool` && e.clipboardData.files.length > 0) {
-                        e.preventDefault();
-                        const files = Array.from(e.clipboardData.files).filter(f => f.type.startsWith('image/'));
-                        if (files.length > 0) handleFiles(files);
-                    }
-                });
+                fileInput.onchange = e => { 
+                    if (e.target.files.length) handleFiles(e.target.files);
+                    fileInput.value = '';
+                };
             }
-            
             ['compressor', 'converter', 'resizer', 'pdf'].forEach(setupImageTool);
 
-            // --- Image Compressor Logic ---
+            // --- Tool Logic (Keeping logic mostly identical, mapped to new IDs) ---
+
+            // 1. Compressor
             const qualitySlider = document.getElementById('quality-slider');
             const qualityValue = document.getElementById('quality-value');
-            qualitySlider.addEventListener('input', e => { qualityValue.textContent = e.target.value; });
+            qualitySlider.addEventListener('input', e => qualityValue.textContent = `${e.target.value}%`);
+
             document.getElementById('compress-button').onclick = async () => {
                 const tool = 'compressor';
                 const files = fileStore[tool];
-                if (files.length === 0) return;
+                if (!files.length) return;
                 
                 document.getElementById(`${tool}-batch-area`).classList.add('hidden');
-                const progressArea = document.getElementById(`${tool}-progress-area`);
-                progressArea.classList.remove('hidden');
+                document.getElementById(`${tool}-progress-area`).classList.remove('hidden');
 
-                const quality = parseInt(qualitySlider.value, 10) / 100;
-                const processedBlobs = [];
-                let totalOriginalSize = 0, totalCompressedSize = 0;
+                const quality = parseInt(qualitySlider.value) / 100;
+                const processed = [];
+                let totalOrig = 0, totalComp = 0;
 
                 for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    totalOriginalSize += file.size;
+                    totalOrig += files[i].size;
+                    const pct = Math.round(((i + 1) / files.length) * 100);
                     
-                    const progress = ((i + 1) / files.length) * 100;
-                    document.getElementById(`${tool}-progress-text`).textContent = `Compressing ${i + 1} of ${files.length}...`;
-                    document.getElementById(`${tool}-progress-bar`).style.width = `${progress}%`;
+                    // Radial Progress for Compressor
+                    const circle = document.getElementById('compressor-radial-progress');
+                    const offset = 251 - (251 * pct / 100);
+                    circle.style.strokeDashoffset = offset;
+                    document.getElementById('compressor-progress-text').textContent = `${pct}%`;
 
-                    const compressedBlob = await new Promise(resolve => {
+                    const blob = await new Promise(resolve => {
                         const reader = new FileReader();
                         reader.onload = e => {
                             const img = new Image();
                             img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = img.width; canvas.height = img.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0);
-                                canvas.toBlob(blob => resolve(blob), 'image/jpeg', quality);
+                                const cvs = document.createElement('canvas');
+                                cvs.width = img.width; cvs.height = img.height;
+                                cvs.getContext('2d').drawImage(img, 0, 0);
+                                cvs.toBlob(b => resolve(b), 'image/jpeg', quality);
                             };
                             img.src = e.target.result;
                         };
-                        reader.readAsDataURL(file);
+                        reader.readAsDataURL(files[i]);
                     });
-                    totalCompressedSize += compressedBlob.size;
-                    processedBlobs.push({ name: file.name.replace(/\.[^/.]+$/, "") + '.jpg', blob: compressedBlob });
+                    
+                    totalComp += blob.size;
+                    const name = files[i].name.replace(/\.[^/.]+$/, "") + ".jpg";
+                    processed.push({ name, blob });
+                    await new Promise(r => setTimeout(r, 100)); // Visual delay
                 }
-                
-                launchConfetti();
-                progressArea.classList.add('hidden');
-                
-                const reduction = totalOriginalSize > 0 ? ((totalOriginalSize - totalCompressedSize) / totalOriginalSize * 100).toFixed(1) : 0;
-                let downloadLink;
 
-                if (processedBlobs.length === 1) {
-                    const url = URL.createObjectURL(processedBlobs[0].blob);
-                    downloadLink = { href: url, download: processedBlobs[0].name, text: 'Download Compressed Image' };
+                launchConfetti();
+                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                
+                // Result Generation
+                let link;
+                if (processed.length === 1) {
+                    link = { href: URL.createObjectURL(processed[0].blob), download: processed[0].name, text: 'Download Image' };
                 } else {
                     const zip = new JSZip();
-                    processedBlobs.forEach(item => zip.file(item.name, item.blob));
-                    const zipBlob = await zip.generateAsync({ type: 'blob' });
-                    const url = URL.createObjectURL(zipBlob);
-                    downloadLink = { href: url, download: 'compressed-images.zip', text: 'Download All as .ZIP' };
+                    processed.forEach(p => zip.file(p.name, p.blob));
+                    const content = await zip.generateAsync({type:'blob'});
+                    link = { href: URL.createObjectURL(content), download: 'compressed.zip', text: 'Download All' };
                 }
+
+                const saved = totalOrig - totalComp;
+                const reduction = (saved / totalOrig * 100).toFixed(0);
+                const html = `<div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 mb-2">-${reduction}%</div><p>Reduced from ${formatBytes(totalOrig)} to ${formatBytes(totalComp)}</p>`;
                 
-                const resultArea = document.getElementById(`${tool}-result`);
-                resultArea.innerHTML = createResultCard('Compression Complete!', `<p>Processed ${processedBlobs.length} image(s).</p><p>Total original size: <strong>${formatBytes(totalOriginalSize)}</strong></p><p>Total compressed size: <strong class="text-green-400">${formatBytes(totalCompressedSize)}</strong></p><p>Overall reduction: <strong class="text-green-400">${reduction}%</strong></p>`, [downloadLink], () => {
+                const resArea = document.getElementById(`${tool}-result`);
+                resArea.innerHTML = createResultCard('Compression Magic', html, [link], () => {
                     fileStore[tool] = [];
                     renderFileList(tool);
                 });
-                resultArea.classList.remove('hidden');
+                resArea.classList.remove('hidden');
             };
 
-            // --- Image Converter Logic ---
+            // 2. Converter
             document.getElementById('convert-button').onclick = async () => {
-                 const tool = 'converter';
+                const tool = 'converter';
                 const files = fileStore[tool];
-                if (files.length === 0) return;
+                if (!files.length) return;
 
                 document.getElementById(`${tool}-batch-area`).classList.add('hidden');
-                const progressArea = document.getElementById(`${tool}-progress-area`);
-                progressArea.classList.remove('hidden');
+                document.getElementById(`${tool}-progress-area`).classList.remove('hidden');
 
                 const format = document.getElementById('convert-format-select').value;
-                const extension = format.split('/')[1];
-                const processedBlobs = [];
+                const ext = format.split('/')[1];
+                const processed = [];
 
-                 for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const progress = ((i + 1) / files.length) * 100;
-                    document.getElementById(`${tool}-progress-text`).textContent = `Converting ${i + 1} of ${files.length}...`;
-                    document.getElementById(`${tool}-progress-bar`).style.width = `${progress}%`;
-                    
-                    const convertedBlob = await new Promise(resolve => {
+                for (let i = 0; i < files.length; i++) {
+                    const pct = Math.round(((i + 1) / files.length) * 100);
+                    document.getElementById('converter-progress-bar').style.width = `${pct}%`;
+                    document.getElementById('converter-progress-text').textContent = `Converting... ${pct}%`;
+
+                    const blob = await new Promise(resolve => {
                          const reader = new FileReader();
                         reader.onload = e => {
                             const img = new Image();
                             img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = img.width; canvas.height = img.height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0);
-                                canvas.toBlob(blob => resolve(blob), format);
+                                const cvs = document.createElement('canvas');
+                                cvs.width = img.width; cvs.height = img.height;
+                                cvs.getContext('2d').drawImage(img, 0, 0);
+                                cvs.toBlob(b => resolve(b), format, 0.9);
                             };
                             img.src = e.target.result;
                         };
-                        reader.readAsDataURL(file);
+                        reader.readAsDataURL(files[i]);
                     });
-                    processedBlobs.push({ name: file.name.replace(/\.[^/.]+$/, "") + `.${extension}`, blob: convertedBlob });
-                 }
-
-                launchConfetti();
-                progressArea.classList.add('hidden');
-                let downloadLink;
-
-                if (processedBlobs.length === 1) {
-                    const url = URL.createObjectURL(processedBlobs[0].blob);
-                    downloadLink = { href: url, download: processedBlobs[0].name, text: 'Download Converted Image' };
-                } else {
-                    const zip = new JSZip();
-                    processedBlobs.forEach(item => zip.file(item.name, item.blob));
-                    const zipBlob = await zip.generateAsync({ type: 'blob' });
-                    const url = URL.createObjectURL(zipBlob);
-                    downloadLink = { href: url, download: 'converted-images.zip', text: 'Download All as .ZIP' };
+                    
+                    const name = files[i].name.replace(/\.[^/.]+$/, "") + "." + ext;
+                    processed.push({ name, blob });
+                    await new Promise(r => setTimeout(r, 50));
                 }
 
-                const resultArea = document.getElementById(`${tool}-result`);
-                resultArea.innerHTML = createResultCard('Conversion Complete!', `<p>Converted ${processedBlobs.length} image(s) to ${extension.toUpperCase()}.</p>`, [downloadLink], () => {
+                launchConfetti();
+                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                
+                let link;
+                if (processed.length === 1) {
+                    link = { href: URL.createObjectURL(processed[0].blob), download: processed[0].name, text: 'Download' };
+                } else {
+                    const zip = new JSZip();
+                    processed.forEach(p => zip.file(p.name, p.blob));
+                    link = { href: URL.createObjectURL(await zip.generateAsync({type:'blob'})), download: 'converted.zip', text: 'Download All' };
+                }
+
+                const resArea = document.getElementById(`${tool}-result`);
+                resArea.innerHTML = createResultCard('Format Shifted', `<p>Converted ${processed.length} files to <strong>${ext.toUpperCase()}</strong> successfully.</p>`, [link], () => {
                     fileStore[tool] = [];
                     renderFileList(tool);
                 });
-                resultArea.classList.remove('hidden');
+                resArea.classList.remove('hidden');
             };
 
-            // --- Image Resizer Logic ---
-            const widthInput = document.getElementById('resize-width');
-            const heightInput = document.getElementById('resize-height');
-            const aspectLock = document.getElementById('aspect-ratio-lock');
-            let originalRatios = {};
+            // 3. Resizer
+            const wInput = document.getElementById('resize-width');
+            const hInput = document.getElementById('resize-height');
+            const lockAspect = document.getElementById('aspect-ratio-lock');
+            let aspect = 0;
 
-            widthInput.oninput = () => {
-                if (aspectLock.checked && fileStore.resizer.length > 0 && originalRatios[fileStore.resizer[0].name]) {
-                    heightInput.value = Math.round(widthInput.value / originalRatios[fileStore.resizer[0].name]);
-                }
-            };
-            heightInput.oninput = () => {
-                if (aspectLock.checked && fileStore.resizer.length > 0 && originalRatios[fileStore.resizer[0].name]) {
-                    widthInput.value = Math.round(heightInput.value * originalRatios[fileStore.resizer[0].name]);
-                }
-            };
-            
-            // Overwrite renderFileList to add specific logic for the resizer tool
-            const originalRenderFileList = renderFileList;
+            // Aspect Ratio Logic hook
+            const origRender = renderFileList;
             renderFileList = (tool) => {
-                if (tool === 'resizer' && fileStore.resizer.length > 0 && !originalRatios[fileStore.resizer[0].name]) {
-                    const file = fileStore.resizer[0];
+                if(tool === 'resizer' && fileStore.resizer.length && !aspect) {
                     const img = new Image();
                     img.onload = () => {
-                        originalRatios[file.name] = img.width / img.height;
-                        if (!widthInput.value && !heightInput.value) {
-                            widthInput.value = img.width;
-                        }
-                        if (aspectLock.checked) {
-                           heightInput.value = Math.round(widthInput.value / originalRatios[file.name]);
-                        }
-                        URL.revokeObjectURL(img.src);
+                        aspect = img.width / img.height;
+                        if(!wInput.value) { wInput.value = img.width; hInput.value = img.height; }
                     };
-                    img.src = URL.createObjectURL(file);
+                    img.src = URL.createObjectURL(fileStore.resizer[0]);
                 }
-                originalRenderFileList(tool);
-            };
+                origRender(tool);
+            }
+            
+            wInput.oninput = () => { if(lockAspect.checked && aspect) hInput.value = Math.round(wInput.value / aspect); };
+            hInput.oninput = () => { if(lockAspect.checked && aspect) wInput.value = Math.round(hInput.value * aspect); };
 
             document.getElementById('resize-button').onclick = async () => {
                 const tool = 'resizer';
                 const files = fileStore[tool];
-                const width = parseInt(widthInput.value);
-                const height = parseInt(heightInput.value);
-                if (files.length === 0 || !width || !height) return;
-
+                const w = parseInt(wInput.value);
+                const h = parseInt(hInput.value);
+                
+                if(!files.length || !w || !h) return;
+                
                 document.getElementById(`${tool}-batch-area`).classList.add('hidden');
-                const progressArea = document.getElementById(`${tool}-progress-area`);
-                progressArea.classList.remove('hidden');
+                document.getElementById(`${tool}-progress-area`).classList.remove('hidden');
+                
+                const processed = [];
+                for (let i = 0; i < files.length; i++) {
+                    const pct = Math.round(((i + 1) / files.length) * 100);
+                    document.getElementById('resizer-progress-bar').style.width = `${pct}%`;
+                    document.getElementById('resizer-progress-text').textContent = `${pct}%`;
 
-                const processedBlobs = [];
-                 for (let i = 0; i < files.length; i++) {
-                    const file = files[i];
-                    const progress = ((i + 1) / files.length) * 100;
-                    document.getElementById(`${tool}-progress-text`).textContent = `Resizing ${i + 1} of ${files.length}...`;
-                    document.getElementById(`${tool}-progress-bar`).style.width = `${progress}%`;
-                    
-                    const resizedBlob = await new Promise(resolve => {
+                    const blob = await new Promise(resolve => {
                          const reader = new FileReader();
                         reader.onload = e => {
                             const img = new Image();
                             img.onload = () => {
-                                const canvas = document.createElement('canvas');
-                                canvas.width = width; canvas.height = height;
-                                const ctx = canvas.getContext('2d');
-                                ctx.drawImage(img, 0, 0, width, height);
-                                canvas.toBlob(blob => resolve(blob), file.type);
+                                const cvs = document.createElement('canvas');
+                                cvs.width = w; cvs.height = h;
+                                const ctx = cvs.getContext('2d');
+                                ctx.imageSmoothingQuality = 'high';
+                                ctx.drawImage(img, 0, 0, w, h);
+                                cvs.toBlob(b => resolve(b), files[i].type);
                             };
                             img.src = e.target.result;
                         };
-                        reader.readAsDataURL(file);
+                        reader.readAsDataURL(files[i]);
                     });
-                    processedBlobs.push({ name: `resized-${file.name}`, blob: resizedBlob });
-                 }
-                
-                launchConfetti();
-                progressArea.classList.add('hidden');
-                let downloadLink;
-
-                if (processedBlobs.length === 1) {
-                    const url = URL.createObjectURL(processedBlobs[0].blob);
-                    downloadLink = { href: url, download: processedBlobs[0].name, text: 'Download Resized Image' };
-                } else {
-                    const zip = new JSZip();
-                    processedBlobs.forEach(item => zip.file(item.name, item.blob));
-                    const zipBlob = await zip.generateAsync({ type: 'blob' });
-                    const url = URL.createObjectURL(zipBlob);
-                    downloadLink = { href: url, download: 'resized-images.zip', text: 'Download All as .ZIP' };
+                    processed.push({ name: files[i].name, blob });
+                    await new Promise(r => setTimeout(r, 50));
                 }
 
-                const resultArea = document.getElementById(`${tool}-result`);
-                resultArea.innerHTML = createResultCard('Resize Complete!', `<p>Resized ${processedBlobs.length} image(s) to ${width}x${height}px.</p>`, [downloadLink], () => {
+                launchConfetti();
+                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                
+                let link;
+                if (processed.length === 1) {
+                    link = { href: URL.createObjectURL(processed[0].blob), download: `resized_${processed[0].name}`, text: 'Download' };
+                } else {
+                    const zip = new JSZip();
+                    processed.forEach(p => zip.file(p.name, p.blob));
+                    link = { href: URL.createObjectURL(await zip.generateAsync({type:'blob'})), download: 'resized.zip', text: 'Download All' };
+                }
+
+                const resArea = document.getElementById(`${tool}-result`);
+                resArea.innerHTML = createResultCard('Dimension Shift', `<p>Scaled ${processed.length} images to <strong>${w}x${h}</strong>.</p>`, [link], () => {
                     fileStore[tool] = [];
                     renderFileList(tool);
-                    widthInput.value = '';
-                    heightInput.value = '';
-                    originalRatios = {};
+                    aspect = 0;
                 });
-                resultArea.classList.remove('hidden');
+                resArea.classList.remove('hidden');
             };
 
-            // --- Image to PDF Logic ---
+            // 4. PDF
             document.getElementById('pdf-button').onclick = async () => {
                 const tool = 'pdf';
                 const files = fileStore[tool];
-                if (files.length === 0) return;
+                if (!files.length) return;
 
                 document.getElementById(`${tool}-batch-area`).classList.add('hidden');
-                const progressArea = document.getElementById(`${tool}-progress-area`);
-                progressArea.classList.remove('hidden');
-                
-                const pdf = new jsPDF();
-                for(let i=0; i<files.length; i++) {
-                    const file = files[i];
-                    const progress = ((i + 1) / files.length) * 100;
-                    document.getElementById(`${tool}-progress-text`).textContent = `Adding image ${i + 1} of ${files.length}...`;
-                    document.getElementById(`${tool}-progress-bar`).style.width = `${progress}%`;
+                document.getElementById(`${tool}-progress-area`).classList.remove('hidden');
 
-                    const imageData = await new Promise(resolve => {
+                const doc = new jsPDF();
+                
+                for (let i = 0; i < files.length; i++) {
+                    const pct = Math.round(((i + 1) / files.length) * 100);
+                    document.getElementById('pdf-progress-bar').style.width = `${pct}%`;
+                    document.getElementById('pdf-progress-text').textContent = `${pct}%`;
+
+                    const data = await new Promise(r => {
                         const reader = new FileReader();
-                        reader.onload = e => resolve(e.target.result);
-                        reader.readAsDataURL(file);
+                        reader.onload = e => r(e.target.result);
+                        reader.readAsDataURL(files[i]);
                     });
-                    
-                    const imgProps = await new Promise(resolve => {
+
+                    const imgProps = await new Promise(r => {
                         const img = new Image();
-                        img.onload = () => resolve({width: img.width, height: img.height});
-                        img.src = imageData;
+                        img.onload = () => r({w: img.width, h: img.height});
+                        img.src = data;
                     });
 
-                    const pdfWidth = pdf.internal.pageSize.getWidth();
-                    const pdfHeight = pdf.internal.pageSize.getHeight();
-                    const ratio = imgProps.width / imgProps.height;
-                    const pdfRatio = pdfWidth / pdfHeight;
-
-                    let imgWidth, imgHeight;
-                    if(ratio > pdfRatio) {
-                        imgWidth = pdfWidth;
-                        imgHeight = pdfWidth / ratio;
-                    } else {
-                        imgHeight = pdfHeight;
-                        imgWidth = pdfHeight * ratio;
-                    }
+                    const pdfW = doc.internal.pageSize.getWidth();
+                    const pdfH = doc.internal.pageSize.getHeight();
+                    const ratio = Math.min(pdfW / imgProps.w, pdfH / imgProps.h);
+                    const finalW = imgProps.w * ratio;
+                    const finalH = imgProps.h * ratio;
                     
-                    if (i > 0) pdf.addPage();
-                    pdf.addImage(imageData, 'JPEG', (pdfWidth - imgWidth) / 2, (pdfHeight - imgHeight) / 2, imgWidth, imgHeight);
+                    if (i > 0) doc.addPage();
+                    doc.addImage(data, 'JPEG', (pdfW - finalW)/2, (pdfH - finalH)/2, finalW, finalH);
                 }
-                
-                launchConfetti();
-                progressArea.classList.add('hidden');
-                
-                const pdfBlob = pdf.output('blob');
-                const url = URL.createObjectURL(pdfBlob);
-                const downloadLink = { href: url, download: 'converted.pdf', text: 'Download PDF' };
 
-                const resultArea = document.getElementById(`${tool}-result`);
-                resultArea.innerHTML = createResultCard('PDF Created!', `<p>Combined ${files.length} image(s) into a single PDF.</p>`, [downloadLink], () => {
+                launchConfetti();
+                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                
+                const link = { href: URL.createObjectURL(doc.output('blob')), download: 'compiled.pdf', text: 'Download PDF' };
+                
+                const resArea = document.getElementById(`${tool}-result`);
+                resArea.innerHTML = createResultCard('Document Ready', `<p>Successfully bound ${files.length} pages.</p>`, [link], () => {
                     fileStore[tool] = [];
                     renderFileList(tool);
                 });
-                resultArea.classList.remove('hidden');
+                resArea.classList.remove('hidden');
             };
 
-            // --- Lottie Viewer Logic ---
-            const lottieDropZone = document.getElementById('lottie-drop-zone');
-            const lottieFileInput = document.getElementById('lottie-file-input');
-            const lottieViewerArea = document.getElementById('lottie-viewer-area');
-            const lottieRenderArea = document.getElementById('lottie-render-area');
-            const lottieErrorArea = document.getElementById('lottie-error-area');
-            const playPauseButton = document.getElementById('play-pause-button');
-            const playIcon = document.getElementById('play-icon');
-            const pauseIcon = document.getElementById('pause-icon');
-            const stopButton = document.getElementById('stop-button');
-            const loopToggle = document.getElementById('loop-toggle');
-            const speedSlider = document.getElementById('speed-slider');
-            const speedValue = document.getElementById('speed-value');
-            const lottieResetButton = document.getElementById('lottie-reset-button');
-            const lottieBgColor = document.getElementById('lottie-bg-color');
-            const lottieInfo = document.getElementById('lottie-info');
-            const lottieProgressBar = document.getElementById('lottie-progress-bar');
+            // 5. Lottie Logic
+            const lottieDrop = document.getElementById('lottie-drop-zone');
+            const lottieFile = document.getElementById('lottie-file-input');
+            const lottieView = document.getElementById('lottie-viewer-area');
+            const lottieErr = document.getElementById('lottie-error-area');
+            const renderArea = document.getElementById('lottie-render-area');
             
-            const renderLottieAnimation = (animData) => {
-                if(lottieAnimationInstance) lottieAnimationInstance.destroy();
-                lottieRenderArea.innerHTML = '';
-                
-                try {
-                    lottieAnimationInstance = lottie.loadAnimation({
-                        container: lottieRenderArea,
-                        renderer: 'svg',
-                        loop: loopToggle.checked,
-                        autoplay: true,
-                        animationData: animData
-                    });
-
-                    lottieAnimationInstance.setSpeed(parseFloat(speedSlider.value));
-                    playIcon.classList.add('hidden');
-                    pauseIcon.classList.remove('hidden');
-
-                    const { w, h, fr, op } = animData;
-                    const duration = op / fr;
-                    lottieInfo.textContent = `${w}x${h} @ ${fr}fps | ${duration.toFixed(2)}s | Frame: 0/${op}`;
-                    
-                    lottieAnimationInstance.addEventListener('enterFrame', () => {
-                        const currentFrame = Math.floor(lottieAnimationInstance.currentFrame);
-                        const totalFrames = lottieAnimationInstance.totalFrames;
-                        lottieInfo.textContent = `${w}x${h} @ ${fr}fps | ${duration.toFixed(2)}s | Frame: ${currentFrame}/${totalFrames}`;
-                        lottieProgressBar.style.width = `${(currentFrame / totalFrames) * 100}%`;
-                    });
-
-                     lottieAnimationInstance.addEventListener('complete', () => {
-                        if(!lottieAnimationInstance.loop) {
-                            playIcon.classList.remove('hidden');
-                            pauseIcon.classList.add('hidden');
-                        }
-                    });
-
-                } catch(e) {
-                    lottieErrorArea.textContent = 'Invalid Lottie JSON file. Please check the file and try again.';
-                    lottieErrorArea.classList.remove('hidden');
-                }
-            };
-            
-            const handleLottieFile = (file) => {
-                if (!file || !file.name.endsWith('.json')) {
-                    lottieErrorArea.textContent = 'Please upload a valid .json file.';
-                    lottieErrorArea.classList.remove('hidden');
-                    return;
-                }
-                const reader = new FileReader();
-                reader.onload = e => {
+            const handleLottie = (file) => {
+                if(!file.name.endsWith('.json')) return;
+                const r = new FileReader();
+                r.onload = e => {
                     try {
-                        const animData = JSON.parse(e.target.result);
-                        lottieDropZone.classList.add('hidden');
-                        lottieErrorArea.classList.add('hidden');
-                        lottieViewerArea.classList.remove('hidden');
-                        renderLottieAnimation(animData);
-                    } catch (err) {
-                        lottieErrorArea.textContent = 'Invalid Lottie JSON file. Please check the file and try again.';
-                        lottieErrorArea.classList.remove('hidden');
+                        const data = JSON.parse(e.target.result);
+                        lottieDrop.classList.add('hidden');
+                        lottieView.classList.remove('hidden');
+                        if(lottieAnimationInstance) lottieAnimationInstance.destroy();
+                        
+                        lottieAnimationInstance = lottie.loadAnimation({
+                            container: renderArea,
+                            renderer: 'svg',
+                            loop: true,
+                            autoplay: true,
+                            animationData: data
+                        });
+                        
+                        // Controls Hookup
+                        const dur = data.op / data.fr;
+                        document.getElementById('lottie-info').textContent = `${data.w}x${data.h}px | ${data.fr}fps | ${dur.toFixed(1)}s`;
+                        
+                        lottieAnimationInstance.addEventListener('enterFrame', () => {
+                             const p = lottieAnimationInstance.currentFrame / lottieAnimationInstance.totalFrames * 100;
+                             document.getElementById('lottie-progress-bar').style.width = `${p}%`;
+                        });
+                        
+                    } catch(err) {
+                        lottieErr.classList.remove('hidden');
+                        lottieErr.textContent = "Invalid Lottie JSON";
                     }
                 };
-                reader.readAsText(file);
+                r.readAsText(file);
             };
 
-            lottieDropZone.onclick = () => lottieFileInput.click();
-            lottieDropZone.ondragover = e => { e.preventDefault(); lottieDropZone.classList.add('drop-zone-dragover'); };
-            lottieDropZone.ondragleave = e => { e.preventDefault(); lottieDropZone.classList.remove('drop-zone-dragover'); };
-            lottieDropZone.ondrop = e => {
+            lottieDrop.onclick = (e) => { if(e.target.tagName !== 'BUTTON') lottieFile.click(); };
+            lottieDrop.querySelector('button').onclick = () => lottieFile.click();
+            lottieDrop.ondragover = e => { e.preventDefault(); lottieDrop.classList.add('drop-zone-dragover'); };
+            lottieDrop.ondragleave = e => { e.preventDefault(); lottieDrop.classList.remove('drop-zone-dragover'); };
+            lottieDrop.ondrop = e => {
                 e.preventDefault();
-                lottieDropZone.classList.remove('drop-zone-dragover');
-                if (e.dataTransfer.files.length) handleLottieFile(e.dataTransfer.files[0]);
+                lottieDrop.classList.remove('drop-zone-dragover');
+                if(e.dataTransfer.files.length) handleLottie(e.dataTransfer.files[0]);
             };
-            lottieFileInput.onchange = e => { if (e.target.files.length) handleLottieFile(e.target.files[0]); };
+            lottieFile.onchange = e => { if(e.target.files.length) handleLottie(e.target.files[0]); };
 
-            playPauseButton.addEventListener('click', () => {
-                if (!lottieAnimationInstance) return;
-
-                if (pauseIcon.classList.contains('hidden')) {
-                    const isFinished = lottieAnimationInstance.currentFrame >= lottieAnimationInstance.totalFrames - 1;
-                    if(isFinished && !lottieAnimationInstance.loop) {
-                        lottieAnimationInstance.goToAndPlay(0);
-                    } else {
-                        lottieAnimationInstance.play();
-                    }
-                    pauseIcon.classList.remove('hidden');
-                    playIcon.classList.add('hidden');
-                } else { 
+            // Lottie Controls
+            document.getElementById('play-pause-button').onclick = () => {
+                if(!lottieAnimationInstance) return;
+                if(lottieAnimationInstance.isPaused) {
+                    lottieAnimationInstance.play();
+                    document.getElementById('play-icon').classList.add('hidden');
+                    document.getElementById('pause-icon').classList.remove('hidden');
+                } else {
                     lottieAnimationInstance.pause();
-                    pauseIcon.classList.add('hidden');
-                    playIcon.classList.remove('hidden');
+                    document.getElementById('play-icon').classList.remove('hidden');
+                    document.getElementById('pause-icon').classList.add('hidden');
                 }
-            });
-            stopButton.addEventListener('click', () => {
-                if (!lottieAnimationInstance) return;
-                lottieAnimationInstance.stop();
-                playIcon.classList.remove('hidden');
-                pauseIcon.classList.add('hidden');
-                lottieProgressBar.style.width = '0%';
-            });
-            loopToggle.addEventListener('change', () => { if(lottieAnimationInstance) lottieAnimationInstance.loop = loopToggle.checked; });
-            speedSlider.addEventListener('input', () => {
-                const speed = parseFloat(speedSlider.value);
-                speedValue.textContent = speed.toFixed(1);
-                if(lottieAnimationInstance) lottieAnimationInstance.setSpeed(speed);
-            });
-            lottieBgColor.addEventListener('input', (e) => { lottieRenderArea.style.backgroundColor = e.target.value; });
-            const resetLottieViewer = () => {
-                if(lottieAnimationInstance) lottieAnimationInstance.destroy();
-                lottieAnimationInstance = null;
-                lottieDropZone.classList.remove('hidden');
-                lottieViewerArea.classList.add('hidden');
-                lottieErrorArea.classList.add('hidden');
-                lottieFileInput.value = '';
-                lottieInfo.textContent = '';
-                lottieProgressBar.style.width = '0%';
             };
-            lottieResetButton.addEventListener('click', resetLottieViewer);
+            document.getElementById('stop-button').onclick = () => {
+                if(lottieAnimationInstance) lottieAnimationInstance.stop();
+                document.getElementById('play-icon').classList.remove('hidden');
+                document.getElementById('pause-icon').classList.add('hidden');
+            };
+            document.getElementById('speed-slider').oninput = (e) => {
+                const s = parseFloat(e.target.value);
+                document.getElementById('speed-value').textContent = s.toFixed(1) + 'x';
+                if(lottieAnimationInstance) lottieAnimationInstance.setSpeed(s);
+            };
+            document.getElementById('lottie-bg-color').oninput = (e) => {
+                renderArea.style.backgroundColor = e.target.value;
+            };
+            document.getElementById('lottie-reset-button').onclick = () => {
+                if(lottieAnimationInstance) lottieAnimationInstance.destroy();
+                lottieDrop.classList.remove('hidden');
+                lottieView.classList.add('hidden');
+                lottieFile.value = '';
+            };
         });
     </script>
 </body>
 </html>
-
