@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pro Toolkit</title>
+    <title>OmniConverter Pro</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- External Libraries -->
@@ -113,7 +113,17 @@
             from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translate(-50%, -20px); }
+            to { opacity: 1; transform: translate(-50%, 0); }
+        }
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
         .fade-in { animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .toast-in { animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .modal-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         
         .splash-fade-out {
             opacity: 0;
@@ -192,8 +202,28 @@
             <div class="absolute inset-0 bg-indigo-500 blur-3xl opacity-20 rounded-full"></div>
             <div id="lottie-animation" class="w-48 h-48 relative z-10"></div>
         </div>
-        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400 mt-4 tracking-tight">Omni Convert</h1>
+        <h1 class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-fuchsia-400 mt-4 tracking-tight">OmniConvert</h1>
         <p class="text-slate-500 text-sm mt-2 font-light tracking-widest uppercase">Initializing Core</p>
+    </div>
+
+    <!-- Confirmation Modal (Hidden by default) -->
+    <div id="confirm-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm hidden opacity-0 transition-opacity duration-300">
+        <div class="bg-slate-900 border border-white/10 p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl modal-in transform scale-95 transition-transform duration-300">
+            <div class="w-16 h-16 bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
+                <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+            </div>
+            <h3 class="text-2xl font-bold text-white mb-2">Download Started</h3>
+            <p class="text-slate-400 text-sm mb-8">Did the file download successfully?</p>
+            
+            <div class="flex flex-col gap-3">
+                <button id="modal-confirm-btn" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl transition-colors shadow-lg shadow-emerald-500/20">
+                    Yes, Start New Task
+                </button>
+                <button id="modal-cancel-btn" class="w-full bg-white/5 hover:bg-white/10 text-slate-300 font-medium py-3 rounded-xl transition-colors">
+                    No, Keep Editing
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Main Wrapper -->
@@ -575,7 +605,7 @@
                                      <div id="qr-container" class="bg-white p-4 rounded-xl shadow-2xl mb-4"></div>
                                      <div class="flex gap-2">
                                         <button id="qr-download" class="hidden text-sm text-slate-400 hover:text-white flex items-center gap-2 transition-colors">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4h0.01M20 12v6a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h6m-6 6h6m6-6h6m-6 6h6m-6-6v6"></path></svg>
                                             Download
                                         </button>
                                      </div>
@@ -712,14 +742,40 @@
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1', '#a855f7', '#ec4899', '#06b6d4'] });
             };
 
-            const createResultCard = (title, content, links = [], onReset) => {
+            // === NEW: Download Confirmation Workflow ===
+            const showDownloadConfirmation = (onConfirm) => {
+                const modal = document.getElementById('confirm-modal');
+                const confirmBtn = document.getElementById('modal-confirm-btn');
+                const cancelBtn = document.getElementById('modal-cancel-btn');
+                
+                modal.classList.remove('hidden');
+                setTimeout(() => modal.classList.remove('opacity-0'), 10);
+                
+                const close = () => {
+                    modal.classList.add('opacity-0');
+                    setTimeout(() => modal.classList.add('hidden'), 300);
+                };
+
+                confirmBtn.onclick = () => {
+                    close();
+                    if(onConfirm) onConfirm();
+                };
+                
+                cancelBtn.onclick = () => {
+                    close();
+                };
+            };
+
+            const renderResult = (tool, title, content, links = [], onReset) => {
+                const resArea = document.getElementById(`${tool}-result`);
+                
                 const linkButtons = links.map(link => `
-                    <a href="${link.href}" download="${link.download}" class="flex-1 text-center bg-white text-indigo-900 font-bold py-3 px-4 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 shadow-lg">
+                    <a href="${link.href}" download="${link.download}" class="download-btn flex-1 text-center bg-white text-indigo-900 font-bold py-3 px-4 rounded-xl hover:bg-slate-200 transition-colors flex items-center justify-center gap-2 shadow-lg cursor-pointer">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                         ${link.text}
                     </a>`).join('');
                 
-                const card = `
+                resArea.innerHTML = `
                     <div class="bg-gradient-to-br from-indigo-600 to-fuchsia-700 p-1 rounded-2xl shadow-2xl fade-in mt-8">
                         <div class="bg-slate-900/90 backdrop-blur rounded-xl p-8 border border-white/10">
                             <div class="text-center mb-6">
@@ -731,17 +787,30 @@
                             <div class="text-slate-300 mb-8 text-center">${content}</div>
                             <div class="flex flex-col sm:flex-row gap-4">
                                 ${linkButtons}
-                                <button class="reset-button flex-1 text-center bg-slate-800 text-slate-300 font-medium py-3 px-4 rounded-xl hover:bg-slate-700 transition-colors border border-white/10">Process More</button>
+                                <button class="manual-reset flex-1 text-center bg-slate-800 text-slate-300 font-medium py-3 px-4 rounded-xl hover:bg-slate-700 transition-colors border border-white/10">Process More</button>
                             </div>
                         </div>
                     </div>`;
                 
-                setTimeout(() => {
-                    const btn = document.querySelector('.reset-button');
-                    if(btn) btn.onclick = onReset;
-                }, 0);
-                
-                return card;
+                resArea.classList.remove('hidden');
+
+                // Bind manual reset
+                const resetBtn = resArea.querySelector('.manual-reset');
+                if(resetBtn) resetBtn.onclick = onReset;
+
+                // Bind confirmation to download buttons
+                const downloadBtns = resArea.querySelectorAll('.download-btn');
+                downloadBtns.forEach(btn => {
+                    btn.onclick = (e) => {
+                        // 1. Vibrate (if supported, e.g. Android)
+                        if (navigator.vibrate) navigator.vibrate(200);
+
+                        // 2. Allow default download action (browser handles this)
+
+                        // 3. Show confirmation modal
+                        showDownloadConfirmation(onReset);
+                    };
+                });
             };
 
             // Generic Rendering & Handlers
@@ -764,10 +833,14 @@
                     files.forEach((file, index) => {
                         const div = document.createElement('div');
                         div.className = "flex items-center justify-between p-3 rounded-lg bg-white/5 border border-white/5 hover:bg-white/10 transition-colors group";
+                        
+                        // Fix for URL.revokeObjectURL error
+                        const objectUrl = URL.createObjectURL(file);
+                        
                         div.innerHTML = `
                             <div class="flex items-center gap-3 overflow-hidden">
                                 <div class="w-10 h-10 rounded bg-black/50 flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/10">
-                                    <img src="${URL.createObjectURL(file)}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" onload="URL.revokeObjectURL(this.src)">
+                                    <img src="${objectUrl}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity">
                                 </div>
                                 <div class="min-w-0">
                                     <div class="text-sm text-slate-200 truncate font-medium">${file.name}</div>
@@ -778,6 +851,12 @@
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                             </button>
                         `;
+                        
+                        // Attach clean-up handler
+                        const img = div.querySelector('img');
+                        img.onload = () => URL.revokeObjectURL(objectUrl);
+                        img.onerror = () => URL.revokeObjectURL(objectUrl); // Handle errors too
+                        
                         div.querySelector('.remove-btn').onclick = () => {
                             fileStore[tool].splice(index, 1);
                             renderFileList(tool);
@@ -834,57 +913,65 @@
                 const processed = [];
                 let totalOrig = 0, totalComp = 0;
 
-                for (let i = 0; i < files.length; i++) {
-                    totalOrig += files[i].size;
-                    const pct = Math.round(((i + 1) / files.length) * 100);
-                    
-                    const circle = document.getElementById('compressor-radial-progress');
-                    if(circle) circle.style.strokeDashoffset = 251 - (251 * pct / 100);
-                    document.getElementById('compressor-progress-text').textContent = `${pct}%`;
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        totalOrig += files[i].size;
+                        const pct = Math.round(((i + 1) / files.length) * 100);
+                        
+                        const circle = document.getElementById('compressor-radial-progress');
+                        if(circle) circle.style.strokeDashoffset = 251 - (251 * pct / 100);
+                        document.getElementById('compressor-progress-text').textContent = `${pct}%`;
 
-                    const blob = await new Promise(resolve => {
-                        const reader = new FileReader();
-                        reader.onload = e => {
-                            const img = new Image();
-                            img.onload = () => {
-                                const cvs = document.createElement('canvas');
-                                cvs.width = img.width; cvs.height = img.height;
-                                cvs.getContext('2d').drawImage(img, 0, 0);
-                                cvs.toBlob(b => resolve(b), 'image/jpeg', quality);
+                        const blob = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = e => {
+                                const img = new Image();
+                                img.onload = () => {
+                                    const cvs = document.createElement('canvas');
+                                    cvs.width = img.width; cvs.height = img.height;
+                                    cvs.getContext('2d').drawImage(img, 0, 0);
+                                    cvs.toBlob(b => resolve(b), 'image/jpeg', quality);
+                                };
+                                img.onerror = () => reject(new Error('Image load failed'));
+                                img.src = e.target.result;
                             };
-                            img.src = e.target.result;
-                        };
-                        reader.readAsDataURL(files[i]);
-                    });
+                            reader.onerror = () => reject(new Error('File read failed'));
+                            reader.readAsDataURL(files[i]);
+                        });
+                        
+                        if(blob) {
+                            totalComp += blob.size;
+                            processed.push({ name: files[i].name.replace(/\.[^/.]+$/, "") + ".jpg", blob });
+                        }
+                        await new Promise(r => setTimeout(r, 50));
+                    }
+
+                    launchConfetti();
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
                     
-                    totalComp += blob.size;
-                    processed.push({ name: files[i].name.replace(/\.[^/.]+$/, "") + ".jpg", blob });
-                    await new Promise(r => setTimeout(r, 50));
-                }
+                    let link;
+                    if (processed.length === 1) {
+                        link = { href: URL.createObjectURL(processed[0].blob), download: processed[0].name, text: 'Download Image' };
+                    } else {
+                        const zip = new JSZip();
+                        processed.forEach(p => zip.file(p.name, p.blob));
+                        const content = await zip.generateAsync({type:'blob'});
+                        link = { href: URL.createObjectURL(content), download: 'compressed.zip', text: 'Download All' };
+                    }
 
-                launchConfetti();
-                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
-                
-                let link;
-                if (processed.length === 1) {
-                    link = { href: URL.createObjectURL(processed[0].blob), download: processed[0].name, text: 'Download Image' };
-                } else {
-                    const zip = new JSZip();
-                    processed.forEach(p => zip.file(p.name, p.blob));
-                    const content = await zip.generateAsync({type:'blob'});
-                    link = { href: URL.createObjectURL(content), download: 'compressed.zip', text: 'Download All' };
+                    const saved = totalOrig - totalComp;
+                    const reduction = totalOrig > 0 ? (saved / totalOrig * 100).toFixed(0) : 0;
+                    const html = `<div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 mb-2">-${reduction}%</div><p>Reduced from ${formatBytes(totalOrig)} to ${formatBytes(totalComp)}</p>`;
+                    
+                    renderResult(tool, 'Compression Magic', html, [link], () => {
+                        fileStore[tool] = [];
+                        renderFileList(tool);
+                    });
+                } catch (error) {
+                    alert("An error occurred during compression. Please try different files.");
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                    document.getElementById(`${tool}-batch-area`).classList.remove('hidden');
                 }
-
-                const saved = totalOrig - totalComp;
-                const reduction = totalOrig > 0 ? (saved / totalOrig * 100).toFixed(0) : 0;
-                const html = `<div class="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 mb-2">-${reduction}%</div><p>Reduced from ${formatBytes(totalOrig)} to ${formatBytes(totalComp)}</p>`;
-                
-                const resArea = document.getElementById(`${tool}-result`);
-                resArea.innerHTML = createResultCard('Compression Magic', html, [link], () => {
-                    fileStore[tool] = [];
-                    renderFileList(tool);
-                });
-                resArea.classList.remove('hidden');
             };
 
             // === TOOL 2: CONVERTER ===
@@ -900,48 +987,56 @@
                 const ext = format.split('/')[1];
                 const processed = [];
 
-                for (let i = 0; i < files.length; i++) {
-                    const pct = Math.round(((i + 1) / files.length) * 100);
-                    document.getElementById('converter-progress-bar').style.width = `${pct}%`;
-                    document.getElementById('converter-progress-text').textContent = `Converting... ${pct}%`;
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const pct = Math.round(((i + 1) / files.length) * 100);
+                        document.getElementById('converter-progress-bar').style.width = `${pct}%`;
+                        document.getElementById('converter-progress-text').textContent = `Converting... ${pct}%`;
 
-                    const blob = await new Promise(resolve => {
-                         const reader = new FileReader();
-                        reader.onload = e => {
-                            const img = new Image();
-                            img.onload = () => {
-                                const cvs = document.createElement('canvas');
-                                cvs.width = img.width; cvs.height = img.height;
-                                cvs.getContext('2d').drawImage(img, 0, 0);
-                                cvs.toBlob(b => resolve(b), format, 0.9);
+                        const blob = await new Promise((resolve, reject) => {
+                             const reader = new FileReader();
+                            reader.onload = e => {
+                                const img = new Image();
+                                img.onload = () => {
+                                    const cvs = document.createElement('canvas');
+                                    cvs.width = img.width; cvs.height = img.height;
+                                    cvs.getContext('2d').drawImage(img, 0, 0);
+                                    cvs.toBlob(b => resolve(b), format, 0.9);
+                                };
+                                img.onerror = () => reject(new Error('Image load failed'));
+                                img.src = e.target.result;
                             };
-                            img.src = e.target.result;
-                        };
-                        reader.readAsDataURL(files[i]);
-                    });
+                            reader.onerror = () => reject(new Error('File read failed'));
+                            reader.readAsDataURL(files[i]);
+                        });
+                        
+                        if(blob) {
+                            processed.push({ name: files[i].name.replace(/\.[^/.]+$/, "") + "." + ext, blob });
+                        }
+                        await new Promise(r => setTimeout(r, 50));
+                    }
+
+                    launchConfetti();
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
                     
-                    processed.push({ name: files[i].name.replace(/\.[^/.]+$/, "") + "." + ext, blob });
-                    await new Promise(r => setTimeout(r, 50));
-                }
+                    let link;
+                    if (processed.length === 1) {
+                        link = { href: URL.createObjectURL(processed[0].blob), download: processed[0].name, text: 'Download' };
+                    } else {
+                        const zip = new JSZip();
+                        processed.forEach(p => zip.file(p.name, p.blob));
+                        link = { href: URL.createObjectURL(await zip.generateAsync({type:'blob'})), download: 'converted.zip', text: 'Download All' };
+                    }
 
-                launchConfetti();
-                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
-                
-                let link;
-                if (processed.length === 1) {
-                    link = { href: URL.createObjectURL(processed[0].blob), download: processed[0].name, text: 'Download' };
-                } else {
-                    const zip = new JSZip();
-                    processed.forEach(p => zip.file(p.name, p.blob));
-                    link = { href: URL.createObjectURL(await zip.generateAsync({type:'blob'})), download: 'converted.zip', text: 'Download All' };
+                    renderResult(tool, 'Format Shifted', `<p>Converted ${processed.length} files to <strong>${ext.toUpperCase()}</strong>.</p>`, [link], () => {
+                        fileStore[tool] = [];
+                        renderFileList(tool);
+                    });
+                } catch(error) {
+                    alert("An error occurred during conversion.");
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                    document.getElementById(`${tool}-batch-area`).classList.remove('hidden');
                 }
-
-                const resArea = document.getElementById(`${tool}-result`);
-                resArea.innerHTML = createResultCard('Format Shifted', `<p>Converted ${processed.length} files to <strong>${ext.toUpperCase()}</strong>.</p>`, [link], () => {
-                    fileStore[tool] = [];
-                    renderFileList(tool);
-                });
-                resArea.classList.remove('hidden');
             };
 
             // === TOOL 3: RESIZER ===
@@ -978,50 +1073,58 @@
                 document.getElementById(`${tool}-progress-area`).classList.remove('hidden');
                 
                 const processed = [];
-                for (let i = 0; i < files.length; i++) {
-                    const pct = Math.round(((i + 1) / files.length) * 100);
-                    document.getElementById('resizer-progress-bar').style.width = `${pct}%`;
-                    document.getElementById('resizer-progress-text').textContent = `${pct}%`;
+                try {
+                    for (let i = 0; i < files.length; i++) {
+                        const pct = Math.round(((i + 1) / files.length) * 100);
+                        document.getElementById('resizer-progress-bar').style.width = `${pct}%`;
+                        document.getElementById('resizer-progress-text').textContent = `${pct}%`;
 
-                    const blob = await new Promise(resolve => {
-                         const reader = new FileReader();
-                        reader.onload = e => {
-                            const img = new Image();
-                            img.onload = () => {
-                                const cvs = document.createElement('canvas');
-                                cvs.width = w; cvs.height = h;
-                                const ctx = cvs.getContext('2d');
-                                ctx.imageSmoothingQuality = 'high';
-                                ctx.drawImage(img, 0, 0, w, h);
-                                cvs.toBlob(b => resolve(b), files[i].type);
+                        const blob = await new Promise((resolve, reject) => {
+                             const reader = new FileReader();
+                            reader.onload = e => {
+                                const img = new Image();
+                                img.onload = () => {
+                                    const cvs = document.createElement('canvas');
+                                    cvs.width = w; cvs.height = h;
+                                    const ctx = cvs.getContext('2d');
+                                    ctx.imageSmoothingQuality = 'high';
+                                    ctx.drawImage(img, 0, 0, w, h);
+                                    cvs.toBlob(b => resolve(b), files[i].type);
+                                };
+                                img.onerror = () => reject(new Error('Image load failed'));
+                                img.src = e.target.result;
                             };
-                            img.src = e.target.result;
-                        };
-                        reader.readAsDataURL(files[i]);
+                            reader.onerror = () => reject(new Error('File read failed'));
+                            reader.readAsDataURL(files[i]);
+                        });
+                        if(blob) {
+                            processed.push({ name: files[i].name, blob });
+                        }
+                        await new Promise(r => setTimeout(r, 50));
+                    }
+
+                    launchConfetti();
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                    
+                    let link;
+                    if (processed.length === 1) {
+                        link = { href: URL.createObjectURL(processed[0].blob), download: `resized_${processed[0].name}`, text: 'Download' };
+                    } else {
+                        const zip = new JSZip();
+                        processed.forEach(p => zip.file(p.name, p.blob));
+                        link = { href: URL.createObjectURL(await zip.generateAsync({type:'blob'})), download: 'resized.zip', text: 'Download All' };
+                    }
+
+                    renderResult(tool, 'Dimension Shift', `<p>Scaled ${processed.length} images to <strong>${w}x${h}</strong>.</p>`, [link], () => {
+                        fileStore[tool] = [];
+                        renderFileList(tool);
+                        aspect = 0;
                     });
-                    processed.push({ name: files[i].name, blob });
-                    await new Promise(r => setTimeout(r, 50));
+                } catch(error) {
+                    alert("An error occurred during resizing.");
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                    document.getElementById(`${tool}-batch-area`).classList.remove('hidden');
                 }
-
-                launchConfetti();
-                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
-                
-                let link;
-                if (processed.length === 1) {
-                    link = { href: URL.createObjectURL(processed[0].blob), download: `resized_${processed[0].name}`, text: 'Download' };
-                } else {
-                    const zip = new JSZip();
-                    processed.forEach(p => zip.file(p.name, p.blob));
-                    link = { href: URL.createObjectURL(await zip.generateAsync({type:'blob'})), download: 'resized.zip', text: 'Download All' };
-                }
-
-                const resArea = document.getElementById(`${tool}-result`);
-                resArea.innerHTML = createResultCard('Dimension Shift', `<p>Scaled ${processed.length} images to <strong>${w}x${h}</strong>.</p>`, [link], () => {
-                    fileStore[tool] = [];
-                    renderFileList(tool);
-                    aspect = 0;
-                });
-                resArea.classList.remove('hidden');
             };
 
             // === TOOL 4: PDF ===
@@ -1033,46 +1136,52 @@
                 document.getElementById(`${tool}-batch-area`).classList.add('hidden');
                 document.getElementById(`${tool}-progress-area`).classList.remove('hidden');
 
-                const doc = new jsPDF();
-                
-                for (let i = 0; i < files.length; i++) {
-                    const pct = Math.round(((i + 1) / files.length) * 100);
-                    document.getElementById('pdf-progress-bar').style.width = `${pct}%`;
-                    document.getElementById('pdf-progress-text').textContent = `${pct}%`;
-
-                    const data = await new Promise(r => {
-                        const reader = new FileReader();
-                        reader.onload = e => r(e.target.result);
-                        reader.readAsDataURL(files[i]);
-                    });
-
-                    const imgProps = await new Promise(r => {
-                        const img = new Image();
-                        img.onload = () => r({w: img.width, h: img.height});
-                        img.src = data;
-                    });
-
-                    const pdfW = doc.internal.pageSize.getWidth();
-                    const pdfH = doc.internal.pageSize.getHeight();
-                    const ratio = Math.min(pdfW / imgProps.w, pdfH / imgProps.h);
-                    const finalW = imgProps.w * ratio;
-                    const finalH = imgProps.h * ratio;
+                try {
+                    const doc = new jsPDF();
                     
-                    if (i > 0) doc.addPage();
-                    doc.addImage(data, 'JPEG', (pdfW - finalW)/2, (pdfH - finalH)/2, finalW, finalH);
-                }
+                    for (let i = 0; i < files.length; i++) {
+                        const pct = Math.round(((i + 1) / files.length) * 100);
+                        document.getElementById('pdf-progress-bar').style.width = `${pct}%`;
+                        document.getElementById('pdf-progress-text').textContent = `${pct}%`;
 
-                launchConfetti();
-                document.getElementById(`${tool}-progress-area`).classList.add('hidden');
-                
-                const link = { href: URL.createObjectURL(doc.output('blob')), download: 'compiled.pdf', text: 'Download PDF' };
-                
-                const resArea = document.getElementById(`${tool}-result`);
-                resArea.innerHTML = createResultCard('Document Ready', `<p>Successfully bound ${files.length} pages.</p>`, [link], () => {
-                    fileStore[tool] = [];
-                    renderFileList(tool);
-                });
-                resArea.classList.remove('hidden');
+                        const data = await new Promise((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = e => resolve(e.target.result);
+                            reader.onerror = () => reject(new Error('Read error'));
+                            reader.readAsDataURL(files[i]);
+                        });
+
+                        const imgProps = await new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.onload = () => resolve({w: img.width, h: img.height});
+                            img.onerror = () => reject(new Error('Image load error'));
+                            img.src = data;
+                        });
+
+                        const pdfW = doc.internal.pageSize.getWidth();
+                        const pdfH = doc.internal.pageSize.getHeight();
+                        const ratio = Math.min(pdfW / imgProps.w, pdfH / imgProps.h);
+                        const finalW = imgProps.w * ratio;
+                        const finalH = imgProps.h * ratio;
+                        
+                        if (i > 0) doc.addPage();
+                        doc.addImage(data, 'JPEG', (pdfW - finalW)/2, (pdfH - finalH)/2, finalW, finalH);
+                    }
+
+                    launchConfetti();
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                    
+                    const link = { href: URL.createObjectURL(doc.output('blob')), download: 'compiled.pdf', text: 'Download PDF' };
+                    
+                    renderResult(tool, 'Document Ready', `<p>Successfully bound ${files.length} pages.</p>`, [link], () => {
+                        fileStore[tool] = [];
+                        renderFileList(tool);
+                    });
+                } catch(error) {
+                    alert("An error occurred generating PDF. Check file integrity.");
+                    document.getElementById(`${tool}-progress-area`).classList.add('hidden');
+                    document.getElementById(`${tool}-batch-area`).classList.remove('hidden');
+                }
             };
 
             // === TOOL 5: EDITOR ===
@@ -1096,6 +1205,7 @@
                         resetEditor();
                         renderEditor();
                     };
+                    img.onerror = () => alert("Could not load image.");
                     img.src = e.target.result;
                 };
                 reader.readAsDataURL(file);
@@ -1177,6 +1287,15 @@
                 link.href = editorCanvas.toDataURL();
                 link.click();
                 launchConfetti();
+                
+                // Show Confirmation
+                showDownloadConfirmation(() => {
+                    document.getElementById('editor-file-input').value = '';
+                    document.getElementById('editor-interface').classList.add('hidden');
+                    document.getElementById('editor-drop-zone').classList.remove('hidden');
+                    resetEditor();
+                    currentImage = null;
+                });
             };
 
 
@@ -1248,6 +1367,13 @@
                             link.download = 'qrcode.png';
                             link.href = img.src;
                             link.click();
+                            
+                            // Show Confirmation
+                            showDownloadConfirmation(() => {
+                                document.getElementById('qr-text').value = '';
+                                document.getElementById('qr-container').innerHTML = '';
+                                document.getElementById('qr-download').classList.add('hidden');
+                            });
                         }
                     }
                 }, 100);
